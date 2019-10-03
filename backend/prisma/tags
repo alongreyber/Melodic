@@ -1,0 +1,87 @@
+!_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
+Aggregate	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance *UserConnectionExec) Aggregate(ctx context.Context) (*Aggregate, error) {$/;"	f	language:Go
+Aggregate	/home/alon/melodic/backend/prisma/prisma.go	/^type Aggregate struct {$/;"	t	language:Go
+BatchPayload	/home/alon/melodic/backend/prisma/prisma.go	/^type BatchPayload struct {$/;"	t	language:Go
+BatchPayloadExec	/home/alon/melodic/backend/prisma/prisma.go	/^type BatchPayloadExec struct {$/;"	t	language:Go
+Bool	/home/alon/melodic/backend/prisma/prisma.go	/^func Bool(v bool) *bool    { return &v }$/;"	f	language:Go
+Client	/home/alon/melodic/backend/prisma/prisma.go	/^type Client struct {$/;"	t	language:Go
+CreateUser	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) CreateUser(params UserCreateInput) *UserExec {$/;"	f	language:Go
+DefaultEndpoint	/home/alon/melodic/backend/prisma/prisma.go	/^var DefaultEndpoint = "http:\/\/localhost:4466"$/;"	v	language:Go
+DeleteManyUsers	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) DeleteManyUsers(params *UserWhereInput) *BatchPayloadExec {$/;"	f	language:Go
+DeleteUser	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) DeleteUser(params UserWhereUniqueInput) *UserExec {$/;"	f	language:Go
+Edges	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance *UserConnectionExec) Edges() *UserEdgeExecArray {$/;"	f	language:Go
+ErrNoResult	/home/alon/melodic/backend/prisma/prisma.go	/^var ErrNoResult = errors.New("query returned no result")$/;"	v	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (exec *BatchPayloadExec) Exec(ctx context.Context) (BatchPayload, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance PageInfoExec) Exec(ctx context.Context) (*PageInfo, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance PageInfoExecArray) Exec(ctx context.Context) ([]PageInfo, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserConnectionExec) Exec(ctx context.Context) (*UserConnection, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserConnectionExecArray) Exec(ctx context.Context) ([]UserConnection, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserEdgeExec) Exec(ctx context.Context) (*UserEdge, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserEdgeExecArray) Exec(ctx context.Context) ([]UserEdge, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserExec) Exec(ctx context.Context) (*User, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserExecArray) Exec(ctx context.Context) ([]User, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserPreviousValuesExec) Exec(ctx context.Context) (*UserPreviousValues, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserPreviousValuesExecArray) Exec(ctx context.Context) ([]UserPreviousValues, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserSubscriptionPayloadExec) Exec(ctx context.Context) (*UserSubscriptionPayload, error) {$/;"	f	language:Go
+Exec	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserSubscriptionPayloadExecArray) Exec(ctx context.Context) ([]UserSubscriptionPayload, error) {$/;"	f	language:Go
+Exists	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance PageInfoExec) Exists(ctx context.Context) (bool, error) {$/;"	f	language:Go
+Exists	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserConnectionExec) Exists(ctx context.Context) (bool, error) {$/;"	f	language:Go
+Exists	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserEdgeExec) Exists(ctx context.Context) (bool, error) {$/;"	f	language:Go
+Exists	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserExec) Exists(ctx context.Context) (bool, error) {$/;"	f	language:Go
+Exists	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserPreviousValuesExec) Exists(ctx context.Context) (bool, error) {$/;"	f	language:Go
+Exists	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance UserSubscriptionPayloadExec) Exists(ctx context.Context) (bool, error) {$/;"	f	language:Go
+GraphQL	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) GraphQL(ctx context.Context, query string, variables map[string]interface{}) (map[string]interface{}, error) {$/;"	f	language:Go
+Int32	/home/alon/melodic/backend/prisma/prisma.go	/^func Int32(v int32) *int32 { return &v }$/;"	f	language:Go
+MutationType	/home/alon/melodic/backend/prisma/prisma.go	/^type MutationType string$/;"	t	language:Go
+MutationTypeCreated	/home/alon/melodic/backend/prisma/prisma.go	/^	MutationTypeCreated MutationType = "CREATED"$/;"	c	language:Go
+MutationTypeDeleted	/home/alon/melodic/backend/prisma/prisma.go	/^	MutationTypeDeleted MutationType = "DELETED"$/;"	c	language:Go
+MutationTypeUpdated	/home/alon/melodic/backend/prisma/prisma.go	/^	MutationTypeUpdated MutationType = "UPDATED"$/;"	c	language:Go
+New	/home/alon/melodic/backend/prisma/prisma.go	/^func New(options *Options, opts ...graphql.ClientOption) *Client {$/;"	f	language:Go
+Node	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance *UserEdgeExec) Node() *UserExec {$/;"	f	language:Go
+Node	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance *UserSubscriptionPayloadExec) Node() *UserExec {$/;"	f	language:Go
+Options	/home/alon/melodic/backend/prisma/prisma.go	/^type Options struct {$/;"	t	language:Go
+PageInfo	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance *UserConnectionExec) PageInfo() *PageInfoExec {$/;"	f	language:Go
+PageInfo	/home/alon/melodic/backend/prisma/prisma.go	/^type PageInfo struct {$/;"	t	language:Go
+PageInfoExec	/home/alon/melodic/backend/prisma/prisma.go	/^type PageInfoExec struct {$/;"	t	language:Go
+PageInfoExecArray	/home/alon/melodic/backend/prisma/prisma.go	/^type PageInfoExecArray struct {$/;"	t	language:Go
+PreviousValues	/home/alon/melodic/backend/prisma/prisma.go	/^func (instance *UserSubscriptionPayloadExec) PreviousValues() *UserPreviousValuesExec {$/;"	f	language:Go
+prisma	/home/alon/melodic/backend/prisma/prisma.go	/^package prisma$/;"	p	language:Go
+Secret	/home/alon/melodic/backend/prisma/prisma.go	/^var Secret = ""$/;"	v	language:Go
+Str	/home/alon/melodic/backend/prisma/prisma.go	/^func Str(v string) *string { return &v }$/;"	f	language:Go
+UpdateManyUsers	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) UpdateManyUsers(params UserUpdateManyParams) *BatchPayloadExec {$/;"	f	language:Go
+UpdateUser	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) UpdateUser(params UserUpdateParams) *UserExec {$/;"	f	language:Go
+UpsertUser	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) UpsertUser(params UserUpsertParams) *UserExec {$/;"	f	language:Go
+User	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) User(params UserWhereUniqueInput) *UserExec {$/;"	f	language:Go
+User	/home/alon/melodic/backend/prisma/prisma.go	/^type User struct {$/;"	t	language:Go
+UserConnection	/home/alon/melodic/backend/prisma/prisma.go	/^type UserConnection struct {$/;"	t	language:Go
+UserConnectionExec	/home/alon/melodic/backend/prisma/prisma.go	/^type UserConnectionExec struct {$/;"	t	language:Go
+UserConnectionExecArray	/home/alon/melodic/backend/prisma/prisma.go	/^type UserConnectionExecArray struct {$/;"	t	language:Go
+UserCreateInput	/home/alon/melodic/backend/prisma/prisma.go	/^type UserCreateInput struct {$/;"	t	language:Go
+UserEdge	/home/alon/melodic/backend/prisma/prisma.go	/^type UserEdge struct {$/;"	t	language:Go
+UserEdgeExec	/home/alon/melodic/backend/prisma/prisma.go	/^type UserEdgeExec struct {$/;"	t	language:Go
+UserEdgeExecArray	/home/alon/melodic/backend/prisma/prisma.go	/^type UserEdgeExecArray struct {$/;"	t	language:Go
+UserExec	/home/alon/melodic/backend/prisma/prisma.go	/^type UserExec struct {$/;"	t	language:Go
+UserExecArray	/home/alon/melodic/backend/prisma/prisma.go	/^type UserExecArray struct {$/;"	t	language:Go
+UserOrderByInput	/home/alon/melodic/backend/prisma/prisma.go	/^type UserOrderByInput string$/;"	t	language:Go
+UserOrderByInputIDAsc	/home/alon/melodic/backend/prisma/prisma.go	/^	UserOrderByInputIDAsc    UserOrderByInput = "id_ASC"$/;"	c	language:Go
+UserOrderByInputIDDesc	/home/alon/melodic/backend/prisma/prisma.go	/^	UserOrderByInputIDDesc   UserOrderByInput = "id_DESC"$/;"	c	language:Go
+UserOrderByInputNameAsc	/home/alon/melodic/backend/prisma/prisma.go	/^	UserOrderByInputNameAsc  UserOrderByInput = "name_ASC"$/;"	c	language:Go
+UserOrderByInputNameDesc	/home/alon/melodic/backend/prisma/prisma.go	/^	UserOrderByInputNameDesc UserOrderByInput = "name_DESC"$/;"	c	language:Go
+UserPreviousValues	/home/alon/melodic/backend/prisma/prisma.go	/^type UserPreviousValues struct {$/;"	t	language:Go
+UserPreviousValuesExec	/home/alon/melodic/backend/prisma/prisma.go	/^type UserPreviousValuesExec struct {$/;"	t	language:Go
+UserPreviousValuesExecArray	/home/alon/melodic/backend/prisma/prisma.go	/^type UserPreviousValuesExecArray struct {$/;"	t	language:Go
+Users	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) Users(params *UsersParams) *UserExecArray {$/;"	f	language:Go
+UsersConnection	/home/alon/melodic/backend/prisma/prisma.go	/^func (client *Client) UsersConnection(params *UsersConnectionParams) *UserConnectionExec {$/;"	f	language:Go
+UsersConnectionParams	/home/alon/melodic/backend/prisma/prisma.go	/^type UsersConnectionParams struct {$/;"	t	language:Go
+UsersParams	/home/alon/melodic/backend/prisma/prisma.go	/^type UsersParams struct {$/;"	t	language:Go
+UserSubscriptionPayload	/home/alon/melodic/backend/prisma/prisma.go	/^type UserSubscriptionPayload struct {$/;"	t	language:Go
+UserSubscriptionPayloadExec	/home/alon/melodic/backend/prisma/prisma.go	/^type UserSubscriptionPayloadExec struct {$/;"	t	language:Go
+UserSubscriptionPayloadExecArray	/home/alon/melodic/backend/prisma/prisma.go	/^type UserSubscriptionPayloadExecArray struct {$/;"	t	language:Go
+UserSubscriptionWhereInput	/home/alon/melodic/backend/prisma/prisma.go	/^type UserSubscriptionWhereInput struct {$/;"	t	language:Go
+UserUpdateInput	/home/alon/melodic/backend/prisma/prisma.go	/^type UserUpdateInput struct {$/;"	t	language:Go
+UserUpdateManyMutationInput	/home/alon/melodic/backend/prisma/prisma.go	/^type UserUpdateManyMutationInput struct {$/;"	t	language:Go
+UserUpdateManyParams	/home/alon/melodic/backend/prisma/prisma.go	/^type UserUpdateManyParams struct {$/;"	t	language:Go
+UserUpdateParams	/home/alon/melodic/backend/prisma/prisma.go	/^type UserUpdateParams struct {$/;"	t	language:Go
+UserUpsertParams	/home/alon/melodic/backend/prisma/prisma.go	/^type UserUpsertParams struct {$/;"	t	language:Go
+UserWhereInput	/home/alon/melodic/backend/prisma/prisma.go	/^type UserWhereInput struct {$/;"	t	language:Go
+UserWhereUniqueInput	/home/alon/melodic/backend/prisma/prisma.go	/^type UserWhereUniqueInput struct {$/;"	t	language:Go
