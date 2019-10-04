@@ -1,7 +1,19 @@
 !_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
 App	/home/alon/melodic/backend/index.go	/^type App struct {$/;"	t	language:Go
+Claims	/home/alon/melodic/backend/routes.go	/^type Claims struct {$/;"	t	language:Go
 CreateUserHandler	/home/alon/melodic/backend/routes.go	/^func (app App) CreateUserHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+Credentials	/home/alon/melodic/backend/routes.go	/^type Credentials struct {$/;"	t	language:Go
+errorRespond	/home/alon/melodic/backend/routes.go	/^func errorRespond(w http.ResponseWriter, err string, status int) {$/;"	f	language:Go
+ErrorResponse	/home/alon/melodic/backend/index.go	/^type ErrorResponse struct {$/;"	t	language:Go
 GetUserHandler	/home/alon/melodic/backend/routes.go	/^func (app App) GetUserHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+jwtAuthentication	/home/alon/melodic/backend/index.go	/^var jwtAuthentication = func(next http.Handler) http.Handler {$/;"	v	language:Go
+JwtAuthentication	/home/alon/melodic/backend/routes.go	/^var JwtAuthentication = func(next http.Handler) http.Handler {$/;"	v	language:Go
+jwtKey	/home/alon/melodic/backend/routes.go	/^var jwtKey = []byte("my_secret_key")$/;"	v	language:Go
 main	/home/alon/melodic/backend/index.go	/^func main() {$/;"	f	language:Go
 main	/home/alon/melodic/backend/index.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/routes.go	/^package main$/;"	p	language:Go
+okRespond	/home/alon/melodic/backend/routes.go	/^func okRespond(w http.ResponseWriter, data map[string] interface{}, status int = http.StatusOK) {$/;"	f	language:Go
+respond	/home/alon/melodic/backend/routes.go	/^func respond(w http.ResponseWriter, data map[string] interface{}) {$/;"	f	language:Go
+responseStruct	/home/alon/melodic/backend/routes.go	/^type responseStruct struct {$/;"	t	language:Go
+SignInHandler	/home/alon/melodic/backend/routes.go	/^func (app App) SignInHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+users	/home/alon/melodic/backend/routes.go	/^var users = map[string]string{$/;"	v	language:Go
