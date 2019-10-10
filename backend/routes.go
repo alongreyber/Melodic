@@ -3,11 +3,80 @@ package main
 import (
     "encoding/json"
     "net/http"
-    "fmt"
-    prisma "melodic-backend/prisma"
+    prisma "melodic-backend/prisma-client"
     jwt "github.com/dgrijalva/jwt-go"
-    "strings"
+    "time"
+    "context"
+    spotify "github.com/zmb3/spotify"
 )
+
+type SpotifyAuthCode struct {
+    Code string `json:code`
+}
+
+func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
+    auth := spotify.NewAuthenticator("localhost:8080/login_redirect", spotify.ScopeUserReadPrivate, spotify.ScopeUserReadEmail)
+    // For spotify login we are given a code and need to exchange it for a token
+    // use the same state string here that you used to generate the URL
+    spotify_token, err := auth.Token("123456789", r)
+    if err != nil {
+	errorResponse(w, "Could not get token", http.StatusBadRequest)
+	return
+    }
+    // create a client using the specified token
+    client := auth.NewClient(spotify_token)
+
+    // See if a user exists
+    // If not, create one
+    spotify_user, err := client.CurrentUser()
+    if err != nil {
+	errorResponse(w, "Could not get spotify user info", http.StatusBadRequest)
+	return
+    }
+    user, err := app.db.User(prisma.UserWhereUniqueInput{
+	SpotifyId: &spotify_user.ID,
+    }).Exec( r.Context() )
+    if err != nil {
+	// Create a new user
+	user, err = app.db.CreateUser(prisma.UserCreateInput{
+	    SpotifyId: spotify_user.ID,
+	    // Automatically serializes to json
+	    AccessToken: map[string]interface{}{"token": spotify_token},
+	}).Exec( r.Context() )
+	if err != nil {
+	    errorResponse(w, "Could not create new user", http.StatusInternalServerError)
+	    return
+	}
+    }
+    // Create JWT for app login
+    expirationTime := time.Now().Add(5 * time.Minute)
+    claims := &Claims{
+	Id: user.ID,
+	StandardClaims: jwt.StandardClaims{
+	    // In jwt, the expiry time is expressed in unix milliseconds
+	    ExpiresAt: expirationTime.Unix(),
+	},
+    }
+
+    // Delcare the token 
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    tokenString, err := token.SignedString(jwtKey)
+
+    if err != nil {
+	errorResponse(w, "Error creating JWT", http.StatusInternalServerError)
+	return
+    }
+    // Return the token to the user
+    http.SetCookie(w, &http.Cookie{
+	Name: "token",
+	Value: tokenString,
+	Expires: expirationTime,
+    })
+    // Return success
+    okResponse(w, "Logged In")
+    return
+
+}
 
 func (app App) GetUserHandler(w http.ResponseWriter, r *http.Request) {
     users, _ := app.db.Users(nil).Exec( r.Context() )
@@ -18,129 +87,108 @@ func (app App) GetUserHandler(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(users)
 }
 
-func (app App) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-    // Create a user
-    name := "Alice"
-    newUser, err := app.db.CreateUser(prisma.UserCreateInput{
-	Name: name,
-    }).Exec( r.Context() )
-    if err != nil {
-	panic(err)
-    }
-    w.WriteHeader(http.StatusCreated)
-    fmt.Fprintf(w, "{status: 'Created user %d'}", newUser.ID)
-}
-
-func respond(w http.ResponseWriter, data map[string] interface{}) {
-}
-
-type responseStruct struct {
-    ok: bool
-    data: map[string] interface{}
-}
-
-func errorRespond(w http.ResponseWriter, err string, status int) {
-    response := responseStruct{ok: false, data: err}
+func errorResponse(w http.ResponseWriter, err string, status int) {
+    // Create this for a json response
+    response := make(map[string]interface{})
+    response["ok"] = false
+    response["error"] = err
     w.WriteHeader(status)
     w.Header().Add("Content-Type", "application/json")
-    json.NewEncoder.Encode(response)
+    json.NewEncoder(w).Encode(response)
 }
 
-func okRespond(w http.ResponseWriter, data map[string] interface{}, status int = http.StatusOK) {
-    response := responseStruct{ok: true, data: err}
-    w.WriteHeader(status)
+func okResponse(w http.ResponseWriter, data interface{}) {
+    response := make(map[string]interface{})
+    response["ok"] = true
+    response["data"] = data
+    w.WriteHeader(http.StatusOK)
     w.Header().Add("Content-Type", "application/json")
-    json.NewEncoder.Encode(response)
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    json.NewEncoder(w).Encode(response)
 }
 
 var jwtKey = []byte("my_secret_key")
 
-var users = map[string]string{
-    "user1": "password1",
-    "user2": "password2"
-}
-
-type Credentials struct {
-    Password string `json:"password"`
-    Username string `json:"username"`
-}
-
 type Claims struct {
-    Username string `json:"username"`
+    Id string `json:"id"`
     jwt.StandardClaims
 }
 
-func (app App) SignInHandler(w http.ResponseWriter, r *http.Request) {
-    var creds Credentials
-
-    err := json.NewDecoder(r.Body).Decode(&creds)
-    if err != nil {
-	errorResponse("Bad request", http.StatusBadRequest)
+func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {
+    claimsContext := r.Context().Value("claims")
+    claims := claimsContext.(*Claims)
+    if time.Unix(claims.ExpiresAt, 0).Sub(time.Now())  > 30*time.Second {
+	errorResponse(w, "Token not expired", http.StatusBadRequest)
 	return
-    }
-
-    expectedPassword, ok := users[creds.Username]
-
-    if !ok || expectedPassword != creds.Password {
-	errorResponse("Not Authorized", http.StatusUnauthorized)
-	return
-    }
+    } 
 
     expirationTime := time.Now().Add(5 * time.Minute)
-    claims := &Claims{
-	Username: creds.Username,
-	StandardClaims: jwt.StandardClaims{
-	    // In jwt, the expiry time is expressed in unix milliseconds
-	    ExpiresAt: expirationTime.Unix()
-	}
-    }
-
-    // Delcare the token 
+    claims.ExpiresAt = expirationTime.Unix()
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
     tokenString, err := token.SignedString(jwtKey)
-
     if err != nil {
-	errorResponse("Error creating JWT", http.StatusInternalServiceError)
+	errorResponse(w, "Error creating new token", http.StatusInternalServerError)
 	return
     }
     http.SetCookie(w, &http.Cookie{
 	Name: "token",
 	Value: tokenString,
-	Expires: expirationTime
+	Expires: expirationTime,
     })
 }
 
-var JwtAuthentication = func(next http.Handler) http.Handler {
+func (app App) AddHeaders(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+    })
+}
+
+func (app App) JwtAuthentication(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Check if this route needs auth
+	notAuth := []string{"/login"}
+	requestPath := r.URL.Path
+	for _, value := range notAuth {
+	    if value == requestPath {
+		next.ServeHTTP(w, r)
+		return
+	    }
+	}
+
+	// Check if token is in cookie
 	c, err := r.Cookie("token")
 	if err != nil {
 	    if err == http.ErrNoCookie {
-		errorResponse("No token found", http.StatusUnauthorized)
+		errorResponse(w, "No token found", http.StatusUnauthorized)
+		return
 	    }
-	    errorResponse("Bad request", http.StatusBadRequest)
+	    errorResponse(w, "Bad request", http.StatusBadRequest)
+	    return
 	}
 
+	// Parse token and validate
 	tokenString := c.Value
-
 	claims := &Claims{}
-
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
 
 	if err != nil {
 	    if err == jwt.ErrSignatureInvalid {
-		errorResponse("Invailid JWT Signature", http.StatusUnauthorized)
+		errorResponse(w, "Invailid JWT Signature", http.StatusUnauthorized)
 		return
 	    }
-	    errorResponse("Bad request", http.StatusBadRequest)
+	    errorResponse(w, "Bad request", http.StatusBadRequest)
 	    return
 	}
 	if !token.Valid {
-	    errorResponse("Invalid Token", http.StatusUnauthorized)
+	    errorResponse(w, "Invalid Token", http.StatusUnauthorized)
 	    return
 	}
 
+	// Add claims to context
+	ctx := context.WithValue(r.Context(), "claims", claims)
+	r = r.WithContext(ctx)
 	next.ServeHTTP(w, r)
     })
 }

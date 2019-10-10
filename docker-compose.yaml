@@ -1,10 +1,12 @@
-version: '3'
+version: '3.7'
 services:
   prisma:
     image: prismagraphql/prisma:1.34
     restart: always
     ports:
       - '4466:4466'
+    depends_on:
+      - mongo
     environment:
       PRISMA_CONFIG: |
         port: 4466
@@ -22,5 +24,34 @@ services:
       - '27017:27017'
     volumes:
       - mongo:/var/lib/mongo
+  frontend:
+    build:
+      context: frontend/
+      # For development only build up to build-stage
+      target: build-stage
+    ports:
+      - '8080:8080'
+    # Mount to enable hot reload
+    volumes:
+      - './frontend:/app'
+  backend:
+    build:
+      context: backend/
+      target: build-stage
+    depends_on:
+      - prisma
+    ports:
+      - '5000:5000'
+    volumes:
+      - './backend:/app'
+    environment:
+      - SPOTIFY_ID=e9eb61d2a082412caa493f4c9ef86774
+      - SPOTIFY_SECRET=681d8d66ad6945faa5f3b3ca9ac5559e
+  sass:
+    image: danmaq/ruby-sass
+    volumes:
+      - './frontend:/app'
+    # Watch for changes to the sass folder and recompile sass on any changes
+    command: sass --style compressed --watch /app/src/sass/bulma.scss:/app/public/main.css
 volumes:
   mongo: ~
