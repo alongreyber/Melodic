@@ -6,24 +6,28 @@ services:
     ports:
       - '4466:4466'
     depends_on:
-      - mongo
+      - postgres
     environment:
       PRISMA_CONFIG: |
+        managementApiSecret: my-secret-0000
         port: 4466
         databases:
           default:
-            connector: mongo
-            uri: mongodb://prisma:prisma@mongo
-  mongo:
-    image: mongo:3.6
+            rawAccess: true
+            connector: postgres
+            migrations: true
+            host: postgres
+            port: 5432
+            user: prisma
+            password: prisma
+  postgres:
+    image: postgres
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: prisma
-      MONGO_INITDB_ROOT_PASSWORD: prisma
-    ports:
-      - '27017:27017'
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
     volumes:
-      - mongo:/var/lib/mongo
+      - postgres:/var/lib/postgresql/data
   frontend:
     build:
       context: frontend/
@@ -54,4 +58,4 @@ services:
     # Watch for changes to the sass folder and recompile sass on any changes
     command: sass --style compressed --watch /app/src/sass/bulma.scss:/app/public/main.css
 volumes:
-  mongo: ~
+  postgres: 

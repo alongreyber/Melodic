@@ -1,5 +1,9 @@
 type User {
   id: ID! @id
   spotifyId: String! @unique
-  accessToken: Json!
+
+  spotifyTokenAccess:  String!
+  spotifyTokenRefresh: String!
+  spotifyTokenExpiry:  String!
+  spotifyTokenType:    String!
 }

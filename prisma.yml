@@ -1,6 +1,5 @@
 endpoint: http://localhost:4466
 datamodel: datamodel.prisma
-databaseType: document
 generate:
     - generator: go-client
       output: ./backend/prisma-client

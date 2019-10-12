@@ -18,7 +18,7 @@
       </div>
     </nav>
     <div class="container" id="main-container">
-	<template v-for="(message, index) in store.state.messages">
+	<template v-for="(message, index) in store.messages">
 	    <div class="notification" 
 		v-bind:class="message.color">
 		<button class="delete"
@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts">
-import { store } from "./store.ts";
+import { store } from "./store";
 import { Component, Vue } from 'vue-property-decorator';
 
 @Component

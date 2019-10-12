@@ -1,9 +1,15 @@
 !_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
+addClaims	/home/alon/melodic/backend/routes.go	/^func addClaims(ctx context.Context, c Claims) (context.Context) {$/;"	f	language:Go
 AddHeaders	/home/alon/melodic/backend/routes.go	/^func (app App) AddHeaders(next http.Handler) http.Handler {$/;"	f	language:Go
+addUser	/home/alon/melodic/backend/routes.go	/^func addUser(ctx context.Context, u prisma.User) (context.Context) {$/;"	f	language:Go
 App	/home/alon/melodic/backend/index.go	/^type App struct {$/;"	t	language:Go
 Claims	/home/alon/melodic/backend/routes.go	/^type Claims struct {$/;"	t	language:Go
 errorResponse	/home/alon/melodic/backend/routes.go	/^func errorResponse(w http.ResponseWriter, err string, status int) {$/;"	f	language:Go
-GetUserHandler	/home/alon/melodic/backend/routes.go	/^func (app App) GetUserHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+getClaims	/home/alon/melodic/backend/routes.go	/^func getClaims(ctx context.Context) (*Claims, bool) {$/;"	f	language:Go
+GetThisUserInfo	/home/alon/melodic/backend/routes.go	/^func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+getUser	/home/alon/melodic/backend/routes.go	/^func getUser(ctx context.Context) (*prisma.User, bool) {$/;"	f	language:Go
+GetUserMiddleware	/home/alon/melodic/backend/routes.go	/^func (app App) GetUserMiddleware(next http.Handler) http.Handler {$/;"	f	language:Go
+HealthCheckHandler	/home/alon/melodic/backend/routes.go	/^func (app App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 JwtAuthentication	/home/alon/melodic/backend/routes.go	/^func (app App) JwtAuthentication(next http.Handler) http.Handler {$/;"	f	language:Go
 jwtKey	/home/alon/melodic/backend/routes.go	/^var jwtKey = []byte("my_secret_key")$/;"	v	language:Go
 main	/home/alon/melodic/backend/index.go	/^func main() {$/;"	f	language:Go
@@ -11,5 +17,4 @@ main	/home/alon/melodic/backend/index.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/routes.go	/^package main$/;"	p	language:Go
 okResponse	/home/alon/melodic/backend/routes.go	/^func okResponse(w http.ResponseWriter, data interface{}) {$/;"	f	language:Go
 RefreshHandler	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
-SpotifyAuthCode	/home/alon/melodic/backend/routes.go	/^type SpotifyAuthCode struct {$/;"	t	language:Go
 SpotifyLoginHandler	/home/alon/melodic/backend/routes.go	/^func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
