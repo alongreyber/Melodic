@@ -6,7 +6,9 @@ App	/home/alon/melodic/backend/index.go	/^type App struct {$/;"	t	language:Go
 Claims	/home/alon/melodic/backend/routes.go	/^type Claims struct {$/;"	t	language:Go
 errorResponse	/home/alon/melodic/backend/routes.go	/^func errorResponse(w http.ResponseWriter, err string, status int) {$/;"	f	language:Go
 getClaims	/home/alon/melodic/backend/routes.go	/^func getClaims(ctx context.Context) (*Claims, bool) {$/;"	f	language:Go
+GetListenTo	/home/alon/melodic/backend/routes.go	/^func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 GetThisUserInfo	/home/alon/melodic/backend/routes.go	/^func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+getToken	/home/alon/melodic/backend/routes.go	/^func getToken(user *prisma.User) (*oauth2.Token, bool) {$/;"	f	language:Go
 getUser	/home/alon/melodic/backend/routes.go	/^func getUser(ctx context.Context) (*prisma.User, bool) {$/;"	f	language:Go
 GetUserMiddleware	/home/alon/melodic/backend/routes.go	/^func (app App) GetUserMiddleware(next http.Handler) http.Handler {$/;"	f	language:Go
 HealthCheckHandler	/home/alon/melodic/backend/routes.go	/^func (app App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go

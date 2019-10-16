@@ -133,16 +133,69 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {
+func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     user, ok := getUser(r.Context())
     if !ok {
 	panic("No user")
     }
+    token, ok := getToken(user)
+    if !ok {
+	panic("Couldn't make token")
+    }
+    spotifyClient := app.spotifyAuth.NewClient(token)
+
+    // Get followed artists and compare to existing artistsFollowing
+    apiFollowedAritsts, err := spotifyClient.CurrentUsersFollowedArtists().Artists
+    if err != nil {
+	panic(err)
+    }
+
+    // If we haven't initialized this list, do so now
+    userArtistsFollowing, err := app.db.ArtistsFollowing(
+	&prisma.ArtistsFollowingParams{
+	    Where: &prisma.UserWhere
+
+	}).Exec( r.Context() )
+    if err != nil {
+	panic(err)
+    }
+    if len(userArtistsFollowing) == 0 {
+	for apiArtist := range(apiFollowedAritsts) {
+	    // Create artist
+	    newArtists, err := app.db.CreateArtist(
+		prisma.ArtistCreateInput{
+		    SpotifyId: apiArtist.Id,
+		    Name: apiArtist.Name,
+		    Uri: apiAritst.URI,
+		    Endpoint: apiArtist.Endpoint,
+		},
+	    ).Exec( r.Context() )
+	    // TODO fix
+	    if err != nil {
+		panic(err)
+	    }
+	    // Add connection to user
+	    _, err := app.db.UpdateUser(
+		prisma.UserUpdateInput{
+		    ArtistsFollowing: prisma.ArtistUpdateManyInput{
+			Connect: newArtist.ID,
+		    },
+		},
+	    ).Exec( r.Context() )
+	    if err != nil {
+		panic(err)
+	    }
+	}
+    }
+
+}
+
+// TODO This should return error not bool
+func getToken(user *prisma.User) (*oauth2.Token, bool) {
     var expiry time.Time
     err := json.Unmarshal([]byte(user.SpotifyTokenExpiry), &expiry)
     if err != nil {
-	fmt.Println("Error unmarshaling")
-	panic(err)
+	return nil, false
     }
     token := oauth2.Token{
 	AccessToken:  user.SpotifyTokenAccess,
@@ -150,7 +203,19 @@ func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {
 	Expiry:       expiry,
 	TokenType:    user.SpotifyTokenType,
     }
-    client := app.spotifyAuth.NewClient(&token)
+    return &token, true
+}
+
+func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {
+    user, ok := getUser(r.Context())
+    if !ok {
+	panic("No user")
+    }
+    token, ok := getToken(user)
+    if !ok {
+	panic("Couldn't make token")
+    }
+    client := app.spotifyAuth.NewClient(token)
     spotifyUser, err := client.CurrentUser()
     if err != nil {
 	errorResponse(w, "Could not get current user info", http.StatusInternalServerError)

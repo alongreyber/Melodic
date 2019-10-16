@@ -4,6 +4,9 @@ FROM golang:latest as build-stage
 # Add Maintainer Info
 LABEL maintainer="Alon Greyber <alongreyber@gmail.com>"
 
+# Install delve 
+RUN go get github.com/derekparker/delve/cmd/dlv
+
 # Set the Current Working Directory inside the container
 WORKDIR /app
 

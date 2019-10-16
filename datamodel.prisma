@@ -6,4 +6,19 @@ type User {
   spotifyTokenRefresh: String!
   spotifyTokenExpiry:  String!
   spotifyTokenType:    String!
+
+  artistsFollowing: [Artist!]! @relation(name: "UsersFollowArtists")
+  listenTo: [Artist!]! @relation(name: "UsersListenToArtists")
+}
+
+type Artist {
+    id: ID! @id
+    spotifyId: String!
+    name: String!
+    uri: String!
+    endpoint: String!
+
+    usersFollwing: [User!]! @relation(name: "UsersFollowArtists")
+    usersListeningTo: [User!]! @relation(name: "UsersListenToArtists")
+
 }

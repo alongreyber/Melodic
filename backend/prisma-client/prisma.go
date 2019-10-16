@@ -62,6 +62,85 @@ func (client *Client) GraphQL(ctx context.Context, query string, variables map[s
 var DefaultEndpoint = "http://localhost:4466"
 var Secret = ""
 
+func (client *Client) Artist(params ArtistWhereUniqueInput) *ArtistExec {
+	ret := client.Client.GetOne(
+		nil,
+		params,
+		[2]string{"ArtistWhereUniqueInput!", "Artist"},
+		"artist",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExec{ret}
+}
+
+type ArtistsParams struct {
+	Where   *ArtistWhereInput   `json:"where,omitempty"`
+	OrderBy *ArtistOrderByInput `json:"orderBy,omitempty"`
+	Skip    *int32              `json:"skip,omitempty"`
+	After   *string             `json:"after,omitempty"`
+	Before  *string             `json:"before,omitempty"`
+	First   *int32              `json:"first,omitempty"`
+	Last    *int32              `json:"last,omitempty"`
+}
+
+func (client *Client) Artists(params *ArtistsParams) *ArtistExecArray {
+	var wparams *prisma.WhereParams
+	if params != nil {
+		wparams = &prisma.WhereParams{
+			Where:   params.Where,
+			OrderBy: (*string)(params.OrderBy),
+			Skip:    params.Skip,
+			After:   params.After,
+			Before:  params.Before,
+			First:   params.First,
+			Last:    params.Last,
+		}
+	}
+
+	ret := client.Client.GetMany(
+		nil,
+		wparams,
+		[3]string{"ArtistWhereInput", "ArtistOrderByInput", "Artist"},
+		"artists",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExecArray{ret}
+}
+
+type ArtistsConnectionParams struct {
+	Where   *ArtistWhereInput   `json:"where,omitempty"`
+	OrderBy *ArtistOrderByInput `json:"orderBy,omitempty"`
+	Skip    *int32              `json:"skip,omitempty"`
+	After   *string             `json:"after,omitempty"`
+	Before  *string             `json:"before,omitempty"`
+	First   *int32              `json:"first,omitempty"`
+	Last    *int32              `json:"last,omitempty"`
+}
+
+func (client *Client) ArtistsConnection(params *ArtistsConnectionParams) *ArtistConnectionExec {
+	var wparams *prisma.WhereParams
+	if params != nil {
+		wparams = &prisma.WhereParams{
+			Where:   params.Where,
+			OrderBy: (*string)(params.OrderBy),
+			Skip:    params.Skip,
+			After:   params.After,
+			Before:  params.Before,
+			First:   params.First,
+			Last:    params.Last,
+		}
+	}
+
+	ret := client.Client.GetMany(
+		nil,
+		wparams,
+		[3]string{"ArtistWhereInput", "ArtistOrderByInput", "Artist"},
+		"artistsConnection",
+		[]string{"edges", "pageInfo"})
+
+	return &ArtistConnectionExec{ret}
+}
+
 func (client *Client) User(params UserWhereUniqueInput) *UserExec {
 	ret := client.Client.GetOne(
 		nil,
@@ -139,6 +218,86 @@ func (client *Client) UsersConnection(params *UsersConnectionParams) *UserConnec
 		[]string{"edges", "pageInfo"})
 
 	return &UserConnectionExec{ret}
+}
+
+func (client *Client) CreateArtist(params ArtistCreateInput) *ArtistExec {
+	ret := client.Client.Create(
+		params,
+		[2]string{"ArtistCreateInput!", "Artist"},
+		"createArtist",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExec{ret}
+}
+
+type ArtistUpdateParams struct {
+	Data  ArtistUpdateInput      `json:"data"`
+	Where ArtistWhereUniqueInput `json:"where"`
+}
+
+func (client *Client) UpdateArtist(params ArtistUpdateParams) *ArtistExec {
+	ret := client.Client.Update(
+		prisma.UpdateParams{
+			Data:  params.Data,
+			Where: params.Where,
+		},
+		[3]string{"ArtistUpdateInput!", "ArtistWhereUniqueInput!", "Artist"},
+		"updateArtist",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExec{ret}
+}
+
+type ArtistUpdateManyParams struct {
+	Data  ArtistUpdateManyMutationInput `json:"data"`
+	Where *ArtistWhereInput             `json:"where,omitempty"`
+}
+
+func (client *Client) UpdateManyArtists(params ArtistUpdateManyParams) *BatchPayloadExec {
+	exec := client.Client.UpdateMany(
+		prisma.UpdateParams{
+			Data:  params.Data,
+			Where: params.Where,
+		},
+		[2]string{"ArtistUpdateManyMutationInput!", "ArtistWhereInput"},
+		"updateManyArtists")
+	return &BatchPayloadExec{exec}
+}
+
+type ArtistUpsertParams struct {
+	Where  ArtistWhereUniqueInput `json:"where"`
+	Create ArtistCreateInput      `json:"create"`
+	Update ArtistUpdateInput      `json:"update"`
+}
+
+func (client *Client) UpsertArtist(params ArtistUpsertParams) *ArtistExec {
+	uparams := &prisma.UpsertParams{
+		Where:  params.Where,
+		Create: params.Create,
+		Update: params.Update,
+	}
+	ret := client.Client.Upsert(
+		uparams,
+		[4]string{"ArtistWhereUniqueInput!", "ArtistCreateInput!", "ArtistUpdateInput!", "Artist"},
+		"upsertArtist",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExec{ret}
+}
+
+func (client *Client) DeleteArtist(params ArtistWhereUniqueInput) *ArtistExec {
+	ret := client.Client.Delete(
+		params,
+		[2]string{"ArtistWhereUniqueInput!", "Artist"},
+		"deleteArtist",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExec{ret}
+}
+
+func (client *Client) DeleteManyArtists(params *ArtistWhereInput) *BatchPayloadExec {
+	exec := client.Client.DeleteMany(params, "ArtistWhereInput", "deleteManyArtists")
+	return &BatchPayloadExec{exec}
 }
 
 func (client *Client) CreateUser(params UserCreateInput) *UserExec {
@@ -238,6 +397,21 @@ const (
 	UserOrderByInputSpotifyTokenTypeDesc    UserOrderByInput = "spotifyTokenType_DESC"
 )
 
+type ArtistOrderByInput string
+
+const (
+	ArtistOrderByInputIDAsc         ArtistOrderByInput = "id_ASC"
+	ArtistOrderByInputIDDesc        ArtistOrderByInput = "id_DESC"
+	ArtistOrderByInputSpotifyIdAsc  ArtistOrderByInput = "spotifyId_ASC"
+	ArtistOrderByInputSpotifyIdDesc ArtistOrderByInput = "spotifyId_DESC"
+	ArtistOrderByInputNameAsc       ArtistOrderByInput = "name_ASC"
+	ArtistOrderByInputNameDesc      ArtistOrderByInput = "name_DESC"
+	ArtistOrderByInputUriAsc        ArtistOrderByInput = "uri_ASC"
+	ArtistOrderByInputUriDesc       ArtistOrderByInput = "uri_DESC"
+	ArtistOrderByInputEndpointAsc   ArtistOrderByInput = "endpoint_ASC"
+	ArtistOrderByInputEndpointDesc  ArtistOrderByInput = "endpoint_DESC"
+)
+
 type MutationType string
 
 const (
@@ -246,116 +420,613 @@ const (
 	MutationTypeDeleted MutationType = "DELETED"
 )
 
+type ArtistWhereUniqueInput struct {
+	ID *string `json:"id,omitempty"`
+}
+
+type UserWhereInput struct {
+	ID                               *string           `json:"id,omitempty"`
+	IDNot                            *string           `json:"id_not,omitempty"`
+	IDIn                             []string          `json:"id_in,omitempty"`
+	IDNotIn                          []string          `json:"id_not_in,omitempty"`
+	IDLt                             *string           `json:"id_lt,omitempty"`
+	IDLte                            *string           `json:"id_lte,omitempty"`
+	IDGt                             *string           `json:"id_gt,omitempty"`
+	IDGte                            *string           `json:"id_gte,omitempty"`
+	IDContains                       *string           `json:"id_contains,omitempty"`
+	IDNotContains                    *string           `json:"id_not_contains,omitempty"`
+	IDStartsWith                     *string           `json:"id_starts_with,omitempty"`
+	IDNotStartsWith                  *string           `json:"id_not_starts_with,omitempty"`
+	IDEndsWith                       *string           `json:"id_ends_with,omitempty"`
+	IDNotEndsWith                    *string           `json:"id_not_ends_with,omitempty"`
+	SpotifyId                        *string           `json:"spotifyId,omitempty"`
+	SpotifyIdNot                     *string           `json:"spotifyId_not,omitempty"`
+	SpotifyIdIn                      []string          `json:"spotifyId_in,omitempty"`
+	SpotifyIdNotIn                   []string          `json:"spotifyId_not_in,omitempty"`
+	SpotifyIdLt                      *string           `json:"spotifyId_lt,omitempty"`
+	SpotifyIdLte                     *string           `json:"spotifyId_lte,omitempty"`
+	SpotifyIdGt                      *string           `json:"spotifyId_gt,omitempty"`
+	SpotifyIdGte                     *string           `json:"spotifyId_gte,omitempty"`
+	SpotifyIdContains                *string           `json:"spotifyId_contains,omitempty"`
+	SpotifyIdNotContains             *string           `json:"spotifyId_not_contains,omitempty"`
+	SpotifyIdStartsWith              *string           `json:"spotifyId_starts_with,omitempty"`
+	SpotifyIdNotStartsWith           *string           `json:"spotifyId_not_starts_with,omitempty"`
+	SpotifyIdEndsWith                *string           `json:"spotifyId_ends_with,omitempty"`
+	SpotifyIdNotEndsWith             *string           `json:"spotifyId_not_ends_with,omitempty"`
+	SpotifyTokenAccess               *string           `json:"spotifyTokenAccess,omitempty"`
+	SpotifyTokenAccessNot            *string           `json:"spotifyTokenAccess_not,omitempty"`
+	SpotifyTokenAccessIn             []string          `json:"spotifyTokenAccess_in,omitempty"`
+	SpotifyTokenAccessNotIn          []string          `json:"spotifyTokenAccess_not_in,omitempty"`
+	SpotifyTokenAccessLt             *string           `json:"spotifyTokenAccess_lt,omitempty"`
+	SpotifyTokenAccessLte            *string           `json:"spotifyTokenAccess_lte,omitempty"`
+	SpotifyTokenAccessGt             *string           `json:"spotifyTokenAccess_gt,omitempty"`
+	SpotifyTokenAccessGte            *string           `json:"spotifyTokenAccess_gte,omitempty"`
+	SpotifyTokenAccessContains       *string           `json:"spotifyTokenAccess_contains,omitempty"`
+	SpotifyTokenAccessNotContains    *string           `json:"spotifyTokenAccess_not_contains,omitempty"`
+	SpotifyTokenAccessStartsWith     *string           `json:"spotifyTokenAccess_starts_with,omitempty"`
+	SpotifyTokenAccessNotStartsWith  *string           `json:"spotifyTokenAccess_not_starts_with,omitempty"`
+	SpotifyTokenAccessEndsWith       *string           `json:"spotifyTokenAccess_ends_with,omitempty"`
+	SpotifyTokenAccessNotEndsWith    *string           `json:"spotifyTokenAccess_not_ends_with,omitempty"`
+	SpotifyTokenRefresh              *string           `json:"spotifyTokenRefresh,omitempty"`
+	SpotifyTokenRefreshNot           *string           `json:"spotifyTokenRefresh_not,omitempty"`
+	SpotifyTokenRefreshIn            []string          `json:"spotifyTokenRefresh_in,omitempty"`
+	SpotifyTokenRefreshNotIn         []string          `json:"spotifyTokenRefresh_not_in,omitempty"`
+	SpotifyTokenRefreshLt            *string           `json:"spotifyTokenRefresh_lt,omitempty"`
+	SpotifyTokenRefreshLte           *string           `json:"spotifyTokenRefresh_lte,omitempty"`
+	SpotifyTokenRefreshGt            *string           `json:"spotifyTokenRefresh_gt,omitempty"`
+	SpotifyTokenRefreshGte           *string           `json:"spotifyTokenRefresh_gte,omitempty"`
+	SpotifyTokenRefreshContains      *string           `json:"spotifyTokenRefresh_contains,omitempty"`
+	SpotifyTokenRefreshNotContains   *string           `json:"spotifyTokenRefresh_not_contains,omitempty"`
+	SpotifyTokenRefreshStartsWith    *string           `json:"spotifyTokenRefresh_starts_with,omitempty"`
+	SpotifyTokenRefreshNotStartsWith *string           `json:"spotifyTokenRefresh_not_starts_with,omitempty"`
+	SpotifyTokenRefreshEndsWith      *string           `json:"spotifyTokenRefresh_ends_with,omitempty"`
+	SpotifyTokenRefreshNotEndsWith   *string           `json:"spotifyTokenRefresh_not_ends_with,omitempty"`
+	SpotifyTokenExpiry               *string           `json:"spotifyTokenExpiry,omitempty"`
+	SpotifyTokenExpiryNot            *string           `json:"spotifyTokenExpiry_not,omitempty"`
+	SpotifyTokenExpiryIn             []string          `json:"spotifyTokenExpiry_in,omitempty"`
+	SpotifyTokenExpiryNotIn          []string          `json:"spotifyTokenExpiry_not_in,omitempty"`
+	SpotifyTokenExpiryLt             *string           `json:"spotifyTokenExpiry_lt,omitempty"`
+	SpotifyTokenExpiryLte            *string           `json:"spotifyTokenExpiry_lte,omitempty"`
+	SpotifyTokenExpiryGt             *string           `json:"spotifyTokenExpiry_gt,omitempty"`
+	SpotifyTokenExpiryGte            *string           `json:"spotifyTokenExpiry_gte,omitempty"`
+	SpotifyTokenExpiryContains       *string           `json:"spotifyTokenExpiry_contains,omitempty"`
+	SpotifyTokenExpiryNotContains    *string           `json:"spotifyTokenExpiry_not_contains,omitempty"`
+	SpotifyTokenExpiryStartsWith     *string           `json:"spotifyTokenExpiry_starts_with,omitempty"`
+	SpotifyTokenExpiryNotStartsWith  *string           `json:"spotifyTokenExpiry_not_starts_with,omitempty"`
+	SpotifyTokenExpiryEndsWith       *string           `json:"spotifyTokenExpiry_ends_with,omitempty"`
+	SpotifyTokenExpiryNotEndsWith    *string           `json:"spotifyTokenExpiry_not_ends_with,omitempty"`
+	SpotifyTokenType                 *string           `json:"spotifyTokenType,omitempty"`
+	SpotifyTokenTypeNot              *string           `json:"spotifyTokenType_not,omitempty"`
+	SpotifyTokenTypeIn               []string          `json:"spotifyTokenType_in,omitempty"`
+	SpotifyTokenTypeNotIn            []string          `json:"spotifyTokenType_not_in,omitempty"`
+	SpotifyTokenTypeLt               *string           `json:"spotifyTokenType_lt,omitempty"`
+	SpotifyTokenTypeLte              *string           `json:"spotifyTokenType_lte,omitempty"`
+	SpotifyTokenTypeGt               *string           `json:"spotifyTokenType_gt,omitempty"`
+	SpotifyTokenTypeGte              *string           `json:"spotifyTokenType_gte,omitempty"`
+	SpotifyTokenTypeContains         *string           `json:"spotifyTokenType_contains,omitempty"`
+	SpotifyTokenTypeNotContains      *string           `json:"spotifyTokenType_not_contains,omitempty"`
+	SpotifyTokenTypeStartsWith       *string           `json:"spotifyTokenType_starts_with,omitempty"`
+	SpotifyTokenTypeNotStartsWith    *string           `json:"spotifyTokenType_not_starts_with,omitempty"`
+	SpotifyTokenTypeEndsWith         *string           `json:"spotifyTokenType_ends_with,omitempty"`
+	SpotifyTokenTypeNotEndsWith      *string           `json:"spotifyTokenType_not_ends_with,omitempty"`
+	ArtistsFollowingEvery            *ArtistWhereInput `json:"artistsFollowing_every,omitempty"`
+	ArtistsFollowingSome             *ArtistWhereInput `json:"artistsFollowing_some,omitempty"`
+	ArtistsFollowingNone             *ArtistWhereInput `json:"artistsFollowing_none,omitempty"`
+	ListenToEvery                    *ArtistWhereInput `json:"listenTo_every,omitempty"`
+	ListenToSome                     *ArtistWhereInput `json:"listenTo_some,omitempty"`
+	ListenToNone                     *ArtistWhereInput `json:"listenTo_none,omitempty"`
+	And                              []UserWhereInput  `json:"AND,omitempty"`
+	Or                               []UserWhereInput  `json:"OR,omitempty"`
+	Not                              []UserWhereInput  `json:"NOT,omitempty"`
+}
+
+type ArtistWhereInput struct {
+	ID                     *string            `json:"id,omitempty"`
+	IDNot                  *string            `json:"id_not,omitempty"`
+	IDIn                   []string           `json:"id_in,omitempty"`
+	IDNotIn                []string           `json:"id_not_in,omitempty"`
+	IDLt                   *string            `json:"id_lt,omitempty"`
+	IDLte                  *string            `json:"id_lte,omitempty"`
+	IDGt                   *string            `json:"id_gt,omitempty"`
+	IDGte                  *string            `json:"id_gte,omitempty"`
+	IDContains             *string            `json:"id_contains,omitempty"`
+	IDNotContains          *string            `json:"id_not_contains,omitempty"`
+	IDStartsWith           *string            `json:"id_starts_with,omitempty"`
+	IDNotStartsWith        *string            `json:"id_not_starts_with,omitempty"`
+	IDEndsWith             *string            `json:"id_ends_with,omitempty"`
+	IDNotEndsWith          *string            `json:"id_not_ends_with,omitempty"`
+	SpotifyId              *string            `json:"spotifyId,omitempty"`
+	SpotifyIdNot           *string            `json:"spotifyId_not,omitempty"`
+	SpotifyIdIn            []string           `json:"spotifyId_in,omitempty"`
+	SpotifyIdNotIn         []string           `json:"spotifyId_not_in,omitempty"`
+	SpotifyIdLt            *string            `json:"spotifyId_lt,omitempty"`
+	SpotifyIdLte           *string            `json:"spotifyId_lte,omitempty"`
+	SpotifyIdGt            *string            `json:"spotifyId_gt,omitempty"`
+	SpotifyIdGte           *string            `json:"spotifyId_gte,omitempty"`
+	SpotifyIdContains      *string            `json:"spotifyId_contains,omitempty"`
+	SpotifyIdNotContains   *string            `json:"spotifyId_not_contains,omitempty"`
+	SpotifyIdStartsWith    *string            `json:"spotifyId_starts_with,omitempty"`
+	SpotifyIdNotStartsWith *string            `json:"spotifyId_not_starts_with,omitempty"`
+	SpotifyIdEndsWith      *string            `json:"spotifyId_ends_with,omitempty"`
+	SpotifyIdNotEndsWith   *string            `json:"spotifyId_not_ends_with,omitempty"`
+	Name                   *string            `json:"name,omitempty"`
+	NameNot                *string            `json:"name_not,omitempty"`
+	NameIn                 []string           `json:"name_in,omitempty"`
+	NameNotIn              []string           `json:"name_not_in,omitempty"`
+	NameLt                 *string            `json:"name_lt,omitempty"`
+	NameLte                *string            `json:"name_lte,omitempty"`
+	NameGt                 *string            `json:"name_gt,omitempty"`
+	NameGte                *string            `json:"name_gte,omitempty"`
+	NameContains           *string            `json:"name_contains,omitempty"`
+	NameNotContains        *string            `json:"name_not_contains,omitempty"`
+	NameStartsWith         *string            `json:"name_starts_with,omitempty"`
+	NameNotStartsWith      *string            `json:"name_not_starts_with,omitempty"`
+	NameEndsWith           *string            `json:"name_ends_with,omitempty"`
+	NameNotEndsWith        *string            `json:"name_not_ends_with,omitempty"`
+	Uri                    *string            `json:"uri,omitempty"`
+	UriNot                 *string            `json:"uri_not,omitempty"`
+	UriIn                  []string           `json:"uri_in,omitempty"`
+	UriNotIn               []string           `json:"uri_not_in,omitempty"`
+	UriLt                  *string            `json:"uri_lt,omitempty"`
+	UriLte                 *string            `json:"uri_lte,omitempty"`
+	UriGt                  *string            `json:"uri_gt,omitempty"`
+	UriGte                 *string            `json:"uri_gte,omitempty"`
+	UriContains            *string            `json:"uri_contains,omitempty"`
+	UriNotContains         *string            `json:"uri_not_contains,omitempty"`
+	UriStartsWith          *string            `json:"uri_starts_with,omitempty"`
+	UriNotStartsWith       *string            `json:"uri_not_starts_with,omitempty"`
+	UriEndsWith            *string            `json:"uri_ends_with,omitempty"`
+	UriNotEndsWith         *string            `json:"uri_not_ends_with,omitempty"`
+	Endpoint               *string            `json:"endpoint,omitempty"`
+	EndpointNot            *string            `json:"endpoint_not,omitempty"`
+	EndpointIn             []string           `json:"endpoint_in,omitempty"`
+	EndpointNotIn          []string           `json:"endpoint_not_in,omitempty"`
+	EndpointLt             *string            `json:"endpoint_lt,omitempty"`
+	EndpointLte            *string            `json:"endpoint_lte,omitempty"`
+	EndpointGt             *string            `json:"endpoint_gt,omitempty"`
+	EndpointGte            *string            `json:"endpoint_gte,omitempty"`
+	EndpointContains       *string            `json:"endpoint_contains,omitempty"`
+	EndpointNotContains    *string            `json:"endpoint_not_contains,omitempty"`
+	EndpointStartsWith     *string            `json:"endpoint_starts_with,omitempty"`
+	EndpointNotStartsWith  *string            `json:"endpoint_not_starts_with,omitempty"`
+	EndpointEndsWith       *string            `json:"endpoint_ends_with,omitempty"`
+	EndpointNotEndsWith    *string            `json:"endpoint_not_ends_with,omitempty"`
+	UsersFollwingEvery     *UserWhereInput    `json:"usersFollwing_every,omitempty"`
+	UsersFollwingSome      *UserWhereInput    `json:"usersFollwing_some,omitempty"`
+	UsersFollwingNone      *UserWhereInput    `json:"usersFollwing_none,omitempty"`
+	UsersListeningToEvery  *UserWhereInput    `json:"usersListeningTo_every,omitempty"`
+	UsersListeningToSome   *UserWhereInput    `json:"usersListeningTo_some,omitempty"`
+	UsersListeningToNone   *UserWhereInput    `json:"usersListeningTo_none,omitempty"`
+	And                    []ArtistWhereInput `json:"AND,omitempty"`
+	Or                     []ArtistWhereInput `json:"OR,omitempty"`
+	Not                    []ArtistWhereInput `json:"NOT,omitempty"`
+}
+
 type UserWhereUniqueInput struct {
 	ID        *string `json:"id,omitempty"`
 	SpotifyId *string `json:"spotifyId,omitempty"`
 }
 
-type UserWhereInput struct {
-	ID                               *string          `json:"id,omitempty"`
-	IDNot                            *string          `json:"id_not,omitempty"`
-	IDIn                             []string         `json:"id_in,omitempty"`
-	IDNotIn                          []string         `json:"id_not_in,omitempty"`
-	IDLt                             *string          `json:"id_lt,omitempty"`
-	IDLte                            *string          `json:"id_lte,omitempty"`
-	IDGt                             *string          `json:"id_gt,omitempty"`
-	IDGte                            *string          `json:"id_gte,omitempty"`
-	IDContains                       *string          `json:"id_contains,omitempty"`
-	IDNotContains                    *string          `json:"id_not_contains,omitempty"`
-	IDStartsWith                     *string          `json:"id_starts_with,omitempty"`
-	IDNotStartsWith                  *string          `json:"id_not_starts_with,omitempty"`
-	IDEndsWith                       *string          `json:"id_ends_with,omitempty"`
-	IDNotEndsWith                    *string          `json:"id_not_ends_with,omitempty"`
-	SpotifyId                        *string          `json:"spotifyId,omitempty"`
-	SpotifyIdNot                     *string          `json:"spotifyId_not,omitempty"`
-	SpotifyIdIn                      []string         `json:"spotifyId_in,omitempty"`
-	SpotifyIdNotIn                   []string         `json:"spotifyId_not_in,omitempty"`
-	SpotifyIdLt                      *string          `json:"spotifyId_lt,omitempty"`
-	SpotifyIdLte                     *string          `json:"spotifyId_lte,omitempty"`
-	SpotifyIdGt                      *string          `json:"spotifyId_gt,omitempty"`
-	SpotifyIdGte                     *string          `json:"spotifyId_gte,omitempty"`
-	SpotifyIdContains                *string          `json:"spotifyId_contains,omitempty"`
-	SpotifyIdNotContains             *string          `json:"spotifyId_not_contains,omitempty"`
-	SpotifyIdStartsWith              *string          `json:"spotifyId_starts_with,omitempty"`
-	SpotifyIdNotStartsWith           *string          `json:"spotifyId_not_starts_with,omitempty"`
-	SpotifyIdEndsWith                *string          `json:"spotifyId_ends_with,omitempty"`
-	SpotifyIdNotEndsWith             *string          `json:"spotifyId_not_ends_with,omitempty"`
-	SpotifyTokenAccess               *string          `json:"spotifyTokenAccess,omitempty"`
-	SpotifyTokenAccessNot            *string          `json:"spotifyTokenAccess_not,omitempty"`
-	SpotifyTokenAccessIn             []string         `json:"spotifyTokenAccess_in,omitempty"`
-	SpotifyTokenAccessNotIn          []string         `json:"spotifyTokenAccess_not_in,omitempty"`
-	SpotifyTokenAccessLt             *string          `json:"spotifyTokenAccess_lt,omitempty"`
-	SpotifyTokenAccessLte            *string          `json:"spotifyTokenAccess_lte,omitempty"`
-	SpotifyTokenAccessGt             *string          `json:"spotifyTokenAccess_gt,omitempty"`
-	SpotifyTokenAccessGte            *string          `json:"spotifyTokenAccess_gte,omitempty"`
-	SpotifyTokenAccessContains       *string          `json:"spotifyTokenAccess_contains,omitempty"`
-	SpotifyTokenAccessNotContains    *string          `json:"spotifyTokenAccess_not_contains,omitempty"`
-	SpotifyTokenAccessStartsWith     *string          `json:"spotifyTokenAccess_starts_with,omitempty"`
-	SpotifyTokenAccessNotStartsWith  *string          `json:"spotifyTokenAccess_not_starts_with,omitempty"`
-	SpotifyTokenAccessEndsWith       *string          `json:"spotifyTokenAccess_ends_with,omitempty"`
-	SpotifyTokenAccessNotEndsWith    *string          `json:"spotifyTokenAccess_not_ends_with,omitempty"`
-	SpotifyTokenRefresh              *string          `json:"spotifyTokenRefresh,omitempty"`
-	SpotifyTokenRefreshNot           *string          `json:"spotifyTokenRefresh_not,omitempty"`
-	SpotifyTokenRefreshIn            []string         `json:"spotifyTokenRefresh_in,omitempty"`
-	SpotifyTokenRefreshNotIn         []string         `json:"spotifyTokenRefresh_not_in,omitempty"`
-	SpotifyTokenRefreshLt            *string          `json:"spotifyTokenRefresh_lt,omitempty"`
-	SpotifyTokenRefreshLte           *string          `json:"spotifyTokenRefresh_lte,omitempty"`
-	SpotifyTokenRefreshGt            *string          `json:"spotifyTokenRefresh_gt,omitempty"`
-	SpotifyTokenRefreshGte           *string          `json:"spotifyTokenRefresh_gte,omitempty"`
-	SpotifyTokenRefreshContains      *string          `json:"spotifyTokenRefresh_contains,omitempty"`
-	SpotifyTokenRefreshNotContains   *string          `json:"spotifyTokenRefresh_not_contains,omitempty"`
-	SpotifyTokenRefreshStartsWith    *string          `json:"spotifyTokenRefresh_starts_with,omitempty"`
-	SpotifyTokenRefreshNotStartsWith *string          `json:"spotifyTokenRefresh_not_starts_with,omitempty"`
-	SpotifyTokenRefreshEndsWith      *string          `json:"spotifyTokenRefresh_ends_with,omitempty"`
-	SpotifyTokenRefreshNotEndsWith   *string          `json:"spotifyTokenRefresh_not_ends_with,omitempty"`
-	SpotifyTokenExpiry               *string          `json:"spotifyTokenExpiry,omitempty"`
-	SpotifyTokenExpiryNot            *string          `json:"spotifyTokenExpiry_not,omitempty"`
-	SpotifyTokenExpiryIn             []string         `json:"spotifyTokenExpiry_in,omitempty"`
-	SpotifyTokenExpiryNotIn          []string         `json:"spotifyTokenExpiry_not_in,omitempty"`
-	SpotifyTokenExpiryLt             *string          `json:"spotifyTokenExpiry_lt,omitempty"`
-	SpotifyTokenExpiryLte            *string          `json:"spotifyTokenExpiry_lte,omitempty"`
-	SpotifyTokenExpiryGt             *string          `json:"spotifyTokenExpiry_gt,omitempty"`
-	SpotifyTokenExpiryGte            *string          `json:"spotifyTokenExpiry_gte,omitempty"`
-	SpotifyTokenExpiryContains       *string          `json:"spotifyTokenExpiry_contains,omitempty"`
-	SpotifyTokenExpiryNotContains    *string          `json:"spotifyTokenExpiry_not_contains,omitempty"`
-	SpotifyTokenExpiryStartsWith     *string          `json:"spotifyTokenExpiry_starts_with,omitempty"`
-	SpotifyTokenExpiryNotStartsWith  *string          `json:"spotifyTokenExpiry_not_starts_with,omitempty"`
-	SpotifyTokenExpiryEndsWith       *string          `json:"spotifyTokenExpiry_ends_with,omitempty"`
-	SpotifyTokenExpiryNotEndsWith    *string          `json:"spotifyTokenExpiry_not_ends_with,omitempty"`
-	SpotifyTokenType                 *string          `json:"spotifyTokenType,omitempty"`
-	SpotifyTokenTypeNot              *string          `json:"spotifyTokenType_not,omitempty"`
-	SpotifyTokenTypeIn               []string         `json:"spotifyTokenType_in,omitempty"`
-	SpotifyTokenTypeNotIn            []string         `json:"spotifyTokenType_not_in,omitempty"`
-	SpotifyTokenTypeLt               *string          `json:"spotifyTokenType_lt,omitempty"`
-	SpotifyTokenTypeLte              *string          `json:"spotifyTokenType_lte,omitempty"`
-	SpotifyTokenTypeGt               *string          `json:"spotifyTokenType_gt,omitempty"`
-	SpotifyTokenTypeGte              *string          `json:"spotifyTokenType_gte,omitempty"`
-	SpotifyTokenTypeContains         *string          `json:"spotifyTokenType_contains,omitempty"`
-	SpotifyTokenTypeNotContains      *string          `json:"spotifyTokenType_not_contains,omitempty"`
-	SpotifyTokenTypeStartsWith       *string          `json:"spotifyTokenType_starts_with,omitempty"`
-	SpotifyTokenTypeNotStartsWith    *string          `json:"spotifyTokenType_not_starts_with,omitempty"`
-	SpotifyTokenTypeEndsWith         *string          `json:"spotifyTokenType_ends_with,omitempty"`
-	SpotifyTokenTypeNotEndsWith      *string          `json:"spotifyTokenType_not_ends_with,omitempty"`
-	And                              []UserWhereInput `json:"AND,omitempty"`
-	Or                               []UserWhereInput `json:"OR,omitempty"`
-	Not                              []UserWhereInput `json:"NOT,omitempty"`
+type ArtistCreateInput struct {
+	ID               *string                                     `json:"id,omitempty"`
+	SpotifyId        string                                      `json:"spotifyId"`
+	Name             string                                      `json:"name"`
+	Uri              string                                      `json:"uri"`
+	Endpoint         string                                      `json:"endpoint"`
+	UsersFollwing    *UserCreateManyWithoutArtistsFollowingInput `json:"usersFollwing,omitempty"`
+	UsersListeningTo *UserCreateManyWithoutListenToInput         `json:"usersListeningTo,omitempty"`
 }
 
-type UserCreateInput struct {
-	ID                  *string `json:"id,omitempty"`
-	SpotifyId           string  `json:"spotifyId"`
-	SpotifyTokenAccess  string  `json:"spotifyTokenAccess"`
-	SpotifyTokenRefresh string  `json:"spotifyTokenRefresh"`
-	SpotifyTokenExpiry  string  `json:"spotifyTokenExpiry"`
-	SpotifyTokenType    string  `json:"spotifyTokenType"`
+type UserCreateManyWithoutArtistsFollowingInput struct {
+	Create  []UserCreateWithoutArtistsFollowingInput `json:"create,omitempty"`
+	Connect []UserWhereUniqueInput                   `json:"connect,omitempty"`
 }
 
-type UserUpdateInput struct {
+type UserCreateWithoutArtistsFollowingInput struct {
+	ID                  *string                                       `json:"id,omitempty"`
+	SpotifyId           string                                        `json:"spotifyId"`
+	SpotifyTokenAccess  string                                        `json:"spotifyTokenAccess"`
+	SpotifyTokenRefresh string                                        `json:"spotifyTokenRefresh"`
+	SpotifyTokenExpiry  string                                        `json:"spotifyTokenExpiry"`
+	SpotifyTokenType    string                                        `json:"spotifyTokenType"`
+	ListenTo            *ArtistCreateManyWithoutUsersListeningToInput `json:"listenTo,omitempty"`
+}
+
+type ArtistCreateManyWithoutUsersListeningToInput struct {
+	Create  []ArtistCreateWithoutUsersListeningToInput `json:"create,omitempty"`
+	Connect []ArtistWhereUniqueInput                   `json:"connect,omitempty"`
+}
+
+type ArtistCreateWithoutUsersListeningToInput struct {
+	ID            *string                                     `json:"id,omitempty"`
+	SpotifyId     string                                      `json:"spotifyId"`
+	Name          string                                      `json:"name"`
+	Uri           string                                      `json:"uri"`
+	Endpoint      string                                      `json:"endpoint"`
+	UsersFollwing *UserCreateManyWithoutArtistsFollowingInput `json:"usersFollwing,omitempty"`
+}
+
+type UserCreateManyWithoutListenToInput struct {
+	Create  []UserCreateWithoutListenToInput `json:"create,omitempty"`
+	Connect []UserWhereUniqueInput           `json:"connect,omitempty"`
+}
+
+type UserCreateWithoutListenToInput struct {
+	ID                  *string                                    `json:"id,omitempty"`
+	SpotifyId           string                                     `json:"spotifyId"`
+	SpotifyTokenAccess  string                                     `json:"spotifyTokenAccess"`
+	SpotifyTokenRefresh string                                     `json:"spotifyTokenRefresh"`
+	SpotifyTokenExpiry  string                                     `json:"spotifyTokenExpiry"`
+	SpotifyTokenType    string                                     `json:"spotifyTokenType"`
+	ArtistsFollowing    *ArtistCreateManyWithoutUsersFollwingInput `json:"artistsFollowing,omitempty"`
+}
+
+type ArtistCreateManyWithoutUsersFollwingInput struct {
+	Create  []ArtistCreateWithoutUsersFollwingInput `json:"create,omitempty"`
+	Connect []ArtistWhereUniqueInput                `json:"connect,omitempty"`
+}
+
+type ArtistCreateWithoutUsersFollwingInput struct {
+	ID               *string                             `json:"id,omitempty"`
+	SpotifyId        string                              `json:"spotifyId"`
+	Name             string                              `json:"name"`
+	Uri              string                              `json:"uri"`
+	Endpoint         string                              `json:"endpoint"`
+	UsersListeningTo *UserCreateManyWithoutListenToInput `json:"usersListeningTo,omitempty"`
+}
+
+type ArtistUpdateInput struct {
+	SpotifyId        *string                                     `json:"spotifyId,omitempty"`
+	Name             *string                                     `json:"name,omitempty"`
+	Uri              *string                                     `json:"uri,omitempty"`
+	Endpoint         *string                                     `json:"endpoint,omitempty"`
+	UsersFollwing    *UserUpdateManyWithoutArtistsFollowingInput `json:"usersFollwing,omitempty"`
+	UsersListeningTo *UserUpdateManyWithoutListenToInput         `json:"usersListeningTo,omitempty"`
+}
+
+type UserUpdateManyWithoutArtistsFollowingInput struct {
+	Create     []UserCreateWithoutArtistsFollowingInput                `json:"create,omitempty"`
+	Delete     []UserWhereUniqueInput                                  `json:"delete,omitempty"`
+	Connect    []UserWhereUniqueInput                                  `json:"connect,omitempty"`
+	Set        []UserWhereUniqueInput                                  `json:"set,omitempty"`
+	Disconnect []UserWhereUniqueInput                                  `json:"disconnect,omitempty"`
+	Update     []UserUpdateWithWhereUniqueWithoutArtistsFollowingInput `json:"update,omitempty"`
+	Upsert     []UserUpsertWithWhereUniqueWithoutArtistsFollowingInput `json:"upsert,omitempty"`
+	DeleteMany []UserScalarWhereInput                                  `json:"deleteMany,omitempty"`
+	UpdateMany []UserUpdateManyWithWhereNestedInput                    `json:"updateMany,omitempty"`
+}
+
+type UserUpdateWithWhereUniqueWithoutArtistsFollowingInput struct {
+	Where UserWhereUniqueInput                       `json:"where"`
+	Data  UserUpdateWithoutArtistsFollowingDataInput `json:"data"`
+}
+
+type UserUpdateWithoutArtistsFollowingDataInput struct {
+	SpotifyId           *string                                       `json:"spotifyId,omitempty"`
+	SpotifyTokenAccess  *string                                       `json:"spotifyTokenAccess,omitempty"`
+	SpotifyTokenRefresh *string                                       `json:"spotifyTokenRefresh,omitempty"`
+	SpotifyTokenExpiry  *string                                       `json:"spotifyTokenExpiry,omitempty"`
+	SpotifyTokenType    *string                                       `json:"spotifyTokenType,omitempty"`
+	ListenTo            *ArtistUpdateManyWithoutUsersListeningToInput `json:"listenTo,omitempty"`
+}
+
+type ArtistUpdateManyWithoutUsersListeningToInput struct {
+	Create     []ArtistCreateWithoutUsersListeningToInput                `json:"create,omitempty"`
+	Delete     []ArtistWhereUniqueInput                                  `json:"delete,omitempty"`
+	Connect    []ArtistWhereUniqueInput                                  `json:"connect,omitempty"`
+	Set        []ArtistWhereUniqueInput                                  `json:"set,omitempty"`
+	Disconnect []ArtistWhereUniqueInput                                  `json:"disconnect,omitempty"`
+	Update     []ArtistUpdateWithWhereUniqueWithoutUsersListeningToInput `json:"update,omitempty"`
+	Upsert     []ArtistUpsertWithWhereUniqueWithoutUsersListeningToInput `json:"upsert,omitempty"`
+	DeleteMany []ArtistScalarWhereInput                                  `json:"deleteMany,omitempty"`
+	UpdateMany []ArtistUpdateManyWithWhereNestedInput                    `json:"updateMany,omitempty"`
+}
+
+type ArtistUpdateWithWhereUniqueWithoutUsersListeningToInput struct {
+	Where ArtistWhereUniqueInput                       `json:"where"`
+	Data  ArtistUpdateWithoutUsersListeningToDataInput `json:"data"`
+}
+
+type ArtistUpdateWithoutUsersListeningToDataInput struct {
+	SpotifyId     *string                                     `json:"spotifyId,omitempty"`
+	Name          *string                                     `json:"name,omitempty"`
+	Uri           *string                                     `json:"uri,omitempty"`
+	Endpoint      *string                                     `json:"endpoint,omitempty"`
+	UsersFollwing *UserUpdateManyWithoutArtistsFollowingInput `json:"usersFollwing,omitempty"`
+}
+
+type ArtistUpsertWithWhereUniqueWithoutUsersListeningToInput struct {
+	Where  ArtistWhereUniqueInput                       `json:"where"`
+	Update ArtistUpdateWithoutUsersListeningToDataInput `json:"update"`
+	Create ArtistCreateWithoutUsersListeningToInput     `json:"create"`
+}
+
+type ArtistScalarWhereInput struct {
+	ID                     *string                  `json:"id,omitempty"`
+	IDNot                  *string                  `json:"id_not,omitempty"`
+	IDIn                   []string                 `json:"id_in,omitempty"`
+	IDNotIn                []string                 `json:"id_not_in,omitempty"`
+	IDLt                   *string                  `json:"id_lt,omitempty"`
+	IDLte                  *string                  `json:"id_lte,omitempty"`
+	IDGt                   *string                  `json:"id_gt,omitempty"`
+	IDGte                  *string                  `json:"id_gte,omitempty"`
+	IDContains             *string                  `json:"id_contains,omitempty"`
+	IDNotContains          *string                  `json:"id_not_contains,omitempty"`
+	IDStartsWith           *string                  `json:"id_starts_with,omitempty"`
+	IDNotStartsWith        *string                  `json:"id_not_starts_with,omitempty"`
+	IDEndsWith             *string                  `json:"id_ends_with,omitempty"`
+	IDNotEndsWith          *string                  `json:"id_not_ends_with,omitempty"`
+	SpotifyId              *string                  `json:"spotifyId,omitempty"`
+	SpotifyIdNot           *string                  `json:"spotifyId_not,omitempty"`
+	SpotifyIdIn            []string                 `json:"spotifyId_in,omitempty"`
+	SpotifyIdNotIn         []string                 `json:"spotifyId_not_in,omitempty"`
+	SpotifyIdLt            *string                  `json:"spotifyId_lt,omitempty"`
+	SpotifyIdLte           *string                  `json:"spotifyId_lte,omitempty"`
+	SpotifyIdGt            *string                  `json:"spotifyId_gt,omitempty"`
+	SpotifyIdGte           *string                  `json:"spotifyId_gte,omitempty"`
+	SpotifyIdContains      *string                  `json:"spotifyId_contains,omitempty"`
+	SpotifyIdNotContains   *string                  `json:"spotifyId_not_contains,omitempty"`
+	SpotifyIdStartsWith    *string                  `json:"spotifyId_starts_with,omitempty"`
+	SpotifyIdNotStartsWith *string                  `json:"spotifyId_not_starts_with,omitempty"`
+	SpotifyIdEndsWith      *string                  `json:"spotifyId_ends_with,omitempty"`
+	SpotifyIdNotEndsWith   *string                  `json:"spotifyId_not_ends_with,omitempty"`
+	Name                   *string                  `json:"name,omitempty"`
+	NameNot                *string                  `json:"name_not,omitempty"`
+	NameIn                 []string                 `json:"name_in,omitempty"`
+	NameNotIn              []string                 `json:"name_not_in,omitempty"`
+	NameLt                 *string                  `json:"name_lt,omitempty"`
+	NameLte                *string                  `json:"name_lte,omitempty"`
+	NameGt                 *string                  `json:"name_gt,omitempty"`
+	NameGte                *string                  `json:"name_gte,omitempty"`
+	NameContains           *string                  `json:"name_contains,omitempty"`
+	NameNotContains        *string                  `json:"name_not_contains,omitempty"`
+	NameStartsWith         *string                  `json:"name_starts_with,omitempty"`
+	NameNotStartsWith      *string                  `json:"name_not_starts_with,omitempty"`
+	NameEndsWith           *string                  `json:"name_ends_with,omitempty"`
+	NameNotEndsWith        *string                  `json:"name_not_ends_with,omitempty"`
+	Uri                    *string                  `json:"uri,omitempty"`
+	UriNot                 *string                  `json:"uri_not,omitempty"`
+	UriIn                  []string                 `json:"uri_in,omitempty"`
+	UriNotIn               []string                 `json:"uri_not_in,omitempty"`
+	UriLt                  *string                  `json:"uri_lt,omitempty"`
+	UriLte                 *string                  `json:"uri_lte,omitempty"`
+	UriGt                  *string                  `json:"uri_gt,omitempty"`
+	UriGte                 *string                  `json:"uri_gte,omitempty"`
+	UriContains            *string                  `json:"uri_contains,omitempty"`
+	UriNotContains         *string                  `json:"uri_not_contains,omitempty"`
+	UriStartsWith          *string                  `json:"uri_starts_with,omitempty"`
+	UriNotStartsWith       *string                  `json:"uri_not_starts_with,omitempty"`
+	UriEndsWith            *string                  `json:"uri_ends_with,omitempty"`
+	UriNotEndsWith         *string                  `json:"uri_not_ends_with,omitempty"`
+	Endpoint               *string                  `json:"endpoint,omitempty"`
+	EndpointNot            *string                  `json:"endpoint_not,omitempty"`
+	EndpointIn             []string                 `json:"endpoint_in,omitempty"`
+	EndpointNotIn          []string                 `json:"endpoint_not_in,omitempty"`
+	EndpointLt             *string                  `json:"endpoint_lt,omitempty"`
+	EndpointLte            *string                  `json:"endpoint_lte,omitempty"`
+	EndpointGt             *string                  `json:"endpoint_gt,omitempty"`
+	EndpointGte            *string                  `json:"endpoint_gte,omitempty"`
+	EndpointContains       *string                  `json:"endpoint_contains,omitempty"`
+	EndpointNotContains    *string                  `json:"endpoint_not_contains,omitempty"`
+	EndpointStartsWith     *string                  `json:"endpoint_starts_with,omitempty"`
+	EndpointNotStartsWith  *string                  `json:"endpoint_not_starts_with,omitempty"`
+	EndpointEndsWith       *string                  `json:"endpoint_ends_with,omitempty"`
+	EndpointNotEndsWith    *string                  `json:"endpoint_not_ends_with,omitempty"`
+	And                    []ArtistScalarWhereInput `json:"AND,omitempty"`
+	Or                     []ArtistScalarWhereInput `json:"OR,omitempty"`
+	Not                    []ArtistScalarWhereInput `json:"NOT,omitempty"`
+}
+
+type ArtistUpdateManyWithWhereNestedInput struct {
+	Where ArtistScalarWhereInput    `json:"where"`
+	Data  ArtistUpdateManyDataInput `json:"data"`
+}
+
+type ArtistUpdateManyDataInput struct {
+	SpotifyId *string `json:"spotifyId,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	Uri       *string `json:"uri,omitempty"`
+	Endpoint  *string `json:"endpoint,omitempty"`
+}
+
+type UserUpsertWithWhereUniqueWithoutArtistsFollowingInput struct {
+	Where  UserWhereUniqueInput                       `json:"where"`
+	Update UserUpdateWithoutArtistsFollowingDataInput `json:"update"`
+	Create UserCreateWithoutArtistsFollowingInput     `json:"create"`
+}
+
+type UserScalarWhereInput struct {
+	ID                               *string                `json:"id,omitempty"`
+	IDNot                            *string                `json:"id_not,omitempty"`
+	IDIn                             []string               `json:"id_in,omitempty"`
+	IDNotIn                          []string               `json:"id_not_in,omitempty"`
+	IDLt                             *string                `json:"id_lt,omitempty"`
+	IDLte                            *string                `json:"id_lte,omitempty"`
+	IDGt                             *string                `json:"id_gt,omitempty"`
+	IDGte                            *string                `json:"id_gte,omitempty"`
+	IDContains                       *string                `json:"id_contains,omitempty"`
+	IDNotContains                    *string                `json:"id_not_contains,omitempty"`
+	IDStartsWith                     *string                `json:"id_starts_with,omitempty"`
+	IDNotStartsWith                  *string                `json:"id_not_starts_with,omitempty"`
+	IDEndsWith                       *string                `json:"id_ends_with,omitempty"`
+	IDNotEndsWith                    *string                `json:"id_not_ends_with,omitempty"`
+	SpotifyId                        *string                `json:"spotifyId,omitempty"`
+	SpotifyIdNot                     *string                `json:"spotifyId_not,omitempty"`
+	SpotifyIdIn                      []string               `json:"spotifyId_in,omitempty"`
+	SpotifyIdNotIn                   []string               `json:"spotifyId_not_in,omitempty"`
+	SpotifyIdLt                      *string                `json:"spotifyId_lt,omitempty"`
+	SpotifyIdLte                     *string                `json:"spotifyId_lte,omitempty"`
+	SpotifyIdGt                      *string                `json:"spotifyId_gt,omitempty"`
+	SpotifyIdGte                     *string                `json:"spotifyId_gte,omitempty"`
+	SpotifyIdContains                *string                `json:"spotifyId_contains,omitempty"`
+	SpotifyIdNotContains             *string                `json:"spotifyId_not_contains,omitempty"`
+	SpotifyIdStartsWith              *string                `json:"spotifyId_starts_with,omitempty"`
+	SpotifyIdNotStartsWith           *string                `json:"spotifyId_not_starts_with,omitempty"`
+	SpotifyIdEndsWith                *string                `json:"spotifyId_ends_with,omitempty"`
+	SpotifyIdNotEndsWith             *string                `json:"spotifyId_not_ends_with,omitempty"`
+	SpotifyTokenAccess               *string                `json:"spotifyTokenAccess,omitempty"`
+	SpotifyTokenAccessNot            *string                `json:"spotifyTokenAccess_not,omitempty"`
+	SpotifyTokenAccessIn             []string               `json:"spotifyTokenAccess_in,omitempty"`
+	SpotifyTokenAccessNotIn          []string               `json:"spotifyTokenAccess_not_in,omitempty"`
+	SpotifyTokenAccessLt             *string                `json:"spotifyTokenAccess_lt,omitempty"`
+	SpotifyTokenAccessLte            *string                `json:"spotifyTokenAccess_lte,omitempty"`
+	SpotifyTokenAccessGt             *string                `json:"spotifyTokenAccess_gt,omitempty"`
+	SpotifyTokenAccessGte            *string                `json:"spotifyTokenAccess_gte,omitempty"`
+	SpotifyTokenAccessContains       *string                `json:"spotifyTokenAccess_contains,omitempty"`
+	SpotifyTokenAccessNotContains    *string                `json:"spotifyTokenAccess_not_contains,omitempty"`
+	SpotifyTokenAccessStartsWith     *string                `json:"spotifyTokenAccess_starts_with,omitempty"`
+	SpotifyTokenAccessNotStartsWith  *string                `json:"spotifyTokenAccess_not_starts_with,omitempty"`
+	SpotifyTokenAccessEndsWith       *string                `json:"spotifyTokenAccess_ends_with,omitempty"`
+	SpotifyTokenAccessNotEndsWith    *string                `json:"spotifyTokenAccess_not_ends_with,omitempty"`
+	SpotifyTokenRefresh              *string                `json:"spotifyTokenRefresh,omitempty"`
+	SpotifyTokenRefreshNot           *string                `json:"spotifyTokenRefresh_not,omitempty"`
+	SpotifyTokenRefreshIn            []string               `json:"spotifyTokenRefresh_in,omitempty"`
+	SpotifyTokenRefreshNotIn         []string               `json:"spotifyTokenRefresh_not_in,omitempty"`
+	SpotifyTokenRefreshLt            *string                `json:"spotifyTokenRefresh_lt,omitempty"`
+	SpotifyTokenRefreshLte           *string                `json:"spotifyTokenRefresh_lte,omitempty"`
+	SpotifyTokenRefreshGt            *string                `json:"spotifyTokenRefresh_gt,omitempty"`
+	SpotifyTokenRefreshGte           *string                `json:"spotifyTokenRefresh_gte,omitempty"`
+	SpotifyTokenRefreshContains      *string                `json:"spotifyTokenRefresh_contains,omitempty"`
+	SpotifyTokenRefreshNotContains   *string                `json:"spotifyTokenRefresh_not_contains,omitempty"`
+	SpotifyTokenRefreshStartsWith    *string                `json:"spotifyTokenRefresh_starts_with,omitempty"`
+	SpotifyTokenRefreshNotStartsWith *string                `json:"spotifyTokenRefresh_not_starts_with,omitempty"`
+	SpotifyTokenRefreshEndsWith      *string                `json:"spotifyTokenRefresh_ends_with,omitempty"`
+	SpotifyTokenRefreshNotEndsWith   *string                `json:"spotifyTokenRefresh_not_ends_with,omitempty"`
+	SpotifyTokenExpiry               *string                `json:"spotifyTokenExpiry,omitempty"`
+	SpotifyTokenExpiryNot            *string                `json:"spotifyTokenExpiry_not,omitempty"`
+	SpotifyTokenExpiryIn             []string               `json:"spotifyTokenExpiry_in,omitempty"`
+	SpotifyTokenExpiryNotIn          []string               `json:"spotifyTokenExpiry_not_in,omitempty"`
+	SpotifyTokenExpiryLt             *string                `json:"spotifyTokenExpiry_lt,omitempty"`
+	SpotifyTokenExpiryLte            *string                `json:"spotifyTokenExpiry_lte,omitempty"`
+	SpotifyTokenExpiryGt             *string                `json:"spotifyTokenExpiry_gt,omitempty"`
+	SpotifyTokenExpiryGte            *string                `json:"spotifyTokenExpiry_gte,omitempty"`
+	SpotifyTokenExpiryContains       *string                `json:"spotifyTokenExpiry_contains,omitempty"`
+	SpotifyTokenExpiryNotContains    *string                `json:"spotifyTokenExpiry_not_contains,omitempty"`
+	SpotifyTokenExpiryStartsWith     *string                `json:"spotifyTokenExpiry_starts_with,omitempty"`
+	SpotifyTokenExpiryNotStartsWith  *string                `json:"spotifyTokenExpiry_not_starts_with,omitempty"`
+	SpotifyTokenExpiryEndsWith       *string                `json:"spotifyTokenExpiry_ends_with,omitempty"`
+	SpotifyTokenExpiryNotEndsWith    *string                `json:"spotifyTokenExpiry_not_ends_with,omitempty"`
+	SpotifyTokenType                 *string                `json:"spotifyTokenType,omitempty"`
+	SpotifyTokenTypeNot              *string                `json:"spotifyTokenType_not,omitempty"`
+	SpotifyTokenTypeIn               []string               `json:"spotifyTokenType_in,omitempty"`
+	SpotifyTokenTypeNotIn            []string               `json:"spotifyTokenType_not_in,omitempty"`
+	SpotifyTokenTypeLt               *string                `json:"spotifyTokenType_lt,omitempty"`
+	SpotifyTokenTypeLte              *string                `json:"spotifyTokenType_lte,omitempty"`
+	SpotifyTokenTypeGt               *string                `json:"spotifyTokenType_gt,omitempty"`
+	SpotifyTokenTypeGte              *string                `json:"spotifyTokenType_gte,omitempty"`
+	SpotifyTokenTypeContains         *string                `json:"spotifyTokenType_contains,omitempty"`
+	SpotifyTokenTypeNotContains      *string                `json:"spotifyTokenType_not_contains,omitempty"`
+	SpotifyTokenTypeStartsWith       *string                `json:"spotifyTokenType_starts_with,omitempty"`
+	SpotifyTokenTypeNotStartsWith    *string                `json:"spotifyTokenType_not_starts_with,omitempty"`
+	SpotifyTokenTypeEndsWith         *string                `json:"spotifyTokenType_ends_with,omitempty"`
+	SpotifyTokenTypeNotEndsWith      *string                `json:"spotifyTokenType_not_ends_with,omitempty"`
+	And                              []UserScalarWhereInput `json:"AND,omitempty"`
+	Or                               []UserScalarWhereInput `json:"OR,omitempty"`
+	Not                              []UserScalarWhereInput `json:"NOT,omitempty"`
+}
+
+type UserUpdateManyWithWhereNestedInput struct {
+	Where UserScalarWhereInput    `json:"where"`
+	Data  UserUpdateManyDataInput `json:"data"`
+}
+
+type UserUpdateManyDataInput struct {
 	SpotifyId           *string `json:"spotifyId,omitempty"`
 	SpotifyTokenAccess  *string `json:"spotifyTokenAccess,omitempty"`
 	SpotifyTokenRefresh *string `json:"spotifyTokenRefresh,omitempty"`
 	SpotifyTokenExpiry  *string `json:"spotifyTokenExpiry,omitempty"`
 	SpotifyTokenType    *string `json:"spotifyTokenType,omitempty"`
+}
+
+type UserUpdateManyWithoutListenToInput struct {
+	Create     []UserCreateWithoutListenToInput                `json:"create,omitempty"`
+	Delete     []UserWhereUniqueInput                          `json:"delete,omitempty"`
+	Connect    []UserWhereUniqueInput                          `json:"connect,omitempty"`
+	Set        []UserWhereUniqueInput                          `json:"set,omitempty"`
+	Disconnect []UserWhereUniqueInput                          `json:"disconnect,omitempty"`
+	Update     []UserUpdateWithWhereUniqueWithoutListenToInput `json:"update,omitempty"`
+	Upsert     []UserUpsertWithWhereUniqueWithoutListenToInput `json:"upsert,omitempty"`
+	DeleteMany []UserScalarWhereInput                          `json:"deleteMany,omitempty"`
+	UpdateMany []UserUpdateManyWithWhereNestedInput            `json:"updateMany,omitempty"`
+}
+
+type UserUpdateWithWhereUniqueWithoutListenToInput struct {
+	Where UserWhereUniqueInput               `json:"where"`
+	Data  UserUpdateWithoutListenToDataInput `json:"data"`
+}
+
+type UserUpdateWithoutListenToDataInput struct {
+	SpotifyId           *string                                    `json:"spotifyId,omitempty"`
+	SpotifyTokenAccess  *string                                    `json:"spotifyTokenAccess,omitempty"`
+	SpotifyTokenRefresh *string                                    `json:"spotifyTokenRefresh,omitempty"`
+	SpotifyTokenExpiry  *string                                    `json:"spotifyTokenExpiry,omitempty"`
+	SpotifyTokenType    *string                                    `json:"spotifyTokenType,omitempty"`
+	ArtistsFollowing    *ArtistUpdateManyWithoutUsersFollwingInput `json:"artistsFollowing,omitempty"`
+}
+
+type ArtistUpdateManyWithoutUsersFollwingInput struct {
+	Create     []ArtistCreateWithoutUsersFollwingInput                `json:"create,omitempty"`
+	Delete     []ArtistWhereUniqueInput                               `json:"delete,omitempty"`
+	Connect    []ArtistWhereUniqueInput                               `json:"connect,omitempty"`
+	Set        []ArtistWhereUniqueInput                               `json:"set,omitempty"`
+	Disconnect []ArtistWhereUniqueInput                               `json:"disconnect,omitempty"`
+	Update     []ArtistUpdateWithWhereUniqueWithoutUsersFollwingInput `json:"update,omitempty"`
+	Upsert     []ArtistUpsertWithWhereUniqueWithoutUsersFollwingInput `json:"upsert,omitempty"`
+	DeleteMany []ArtistScalarWhereInput                               `json:"deleteMany,omitempty"`
+	UpdateMany []ArtistUpdateManyWithWhereNestedInput                 `json:"updateMany,omitempty"`
+}
+
+type ArtistUpdateWithWhereUniqueWithoutUsersFollwingInput struct {
+	Where ArtistWhereUniqueInput                    `json:"where"`
+	Data  ArtistUpdateWithoutUsersFollwingDataInput `json:"data"`
+}
+
+type ArtistUpdateWithoutUsersFollwingDataInput struct {
+	SpotifyId        *string                             `json:"spotifyId,omitempty"`
+	Name             *string                             `json:"name,omitempty"`
+	Uri              *string                             `json:"uri,omitempty"`
+	Endpoint         *string                             `json:"endpoint,omitempty"`
+	UsersListeningTo *UserUpdateManyWithoutListenToInput `json:"usersListeningTo,omitempty"`
+}
+
+type ArtistUpsertWithWhereUniqueWithoutUsersFollwingInput struct {
+	Where  ArtistWhereUniqueInput                    `json:"where"`
+	Update ArtistUpdateWithoutUsersFollwingDataInput `json:"update"`
+	Create ArtistCreateWithoutUsersFollwingInput     `json:"create"`
+}
+
+type UserUpsertWithWhereUniqueWithoutListenToInput struct {
+	Where  UserWhereUniqueInput               `json:"where"`
+	Update UserUpdateWithoutListenToDataInput `json:"update"`
+	Create UserCreateWithoutListenToInput     `json:"create"`
+}
+
+type ArtistUpdateManyMutationInput struct {
+	SpotifyId *string `json:"spotifyId,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	Uri       *string `json:"uri,omitempty"`
+	Endpoint  *string `json:"endpoint,omitempty"`
+}
+
+type UserCreateInput struct {
+	ID                  *string                                       `json:"id,omitempty"`
+	SpotifyId           string                                        `json:"spotifyId"`
+	SpotifyTokenAccess  string                                        `json:"spotifyTokenAccess"`
+	SpotifyTokenRefresh string                                        `json:"spotifyTokenRefresh"`
+	SpotifyTokenExpiry  string                                        `json:"spotifyTokenExpiry"`
+	SpotifyTokenType    string                                        `json:"spotifyTokenType"`
+	ArtistsFollowing    *ArtistCreateManyWithoutUsersFollwingInput    `json:"artistsFollowing,omitempty"`
+	ListenTo            *ArtistCreateManyWithoutUsersListeningToInput `json:"listenTo,omitempty"`
+}
+
+type UserUpdateInput struct {
+	SpotifyId           *string                                       `json:"spotifyId,omitempty"`
+	SpotifyTokenAccess  *string                                       `json:"spotifyTokenAccess,omitempty"`
+	SpotifyTokenRefresh *string                                       `json:"spotifyTokenRefresh,omitempty"`
+	SpotifyTokenExpiry  *string                                       `json:"spotifyTokenExpiry,omitempty"`
+	SpotifyTokenType    *string                                       `json:"spotifyTokenType,omitempty"`
+	ArtistsFollowing    *ArtistUpdateManyWithoutUsersFollwingInput    `json:"artistsFollowing,omitempty"`
+	ListenTo            *ArtistUpdateManyWithoutUsersListeningToInput `json:"listenTo,omitempty"`
 }
 
 type UserUpdateManyMutationInput struct {
@@ -364,6 +1035,17 @@ type UserUpdateManyMutationInput struct {
 	SpotifyTokenRefresh *string `json:"spotifyTokenRefresh,omitempty"`
 	SpotifyTokenExpiry  *string `json:"spotifyTokenExpiry,omitempty"`
 	SpotifyTokenType    *string `json:"spotifyTokenType,omitempty"`
+}
+
+type ArtistSubscriptionWhereInput struct {
+	MutationIn                 []MutationType                 `json:"mutation_in,omitempty"`
+	UpdatedFieldsContains      *string                        `json:"updatedFields_contains,omitempty"`
+	UpdatedFieldsContainsEvery []string                       `json:"updatedFields_contains_every,omitempty"`
+	UpdatedFieldsContainsSome  []string                       `json:"updatedFields_contains_some,omitempty"`
+	Node                       *ArtistWhereInput              `json:"node,omitempty"`
+	And                        []ArtistSubscriptionWhereInput `json:"AND,omitempty"`
+	Or                         []ArtistSubscriptionWhereInput `json:"OR,omitempty"`
+	Not                        []ArtistSubscriptionWhereInput `json:"NOT,omitempty"`
 }
 
 type UserSubscriptionWhereInput struct {
@@ -377,8 +1059,182 @@ type UserSubscriptionWhereInput struct {
 	Not                        []UserSubscriptionWhereInput `json:"NOT,omitempty"`
 }
 
+type ArtistExec struct {
+	exec *prisma.Exec
+}
+
+type UsersFollwingParamsExec struct {
+	Where   *UserWhereInput
+	OrderBy *UserOrderByInput
+	Skip    *int32
+	After   *string
+	Before  *string
+	First   *int32
+	Last    *int32
+}
+
+func (instance *ArtistExec) UsersFollwing(params *UsersFollwingParamsExec) *UserExecArray {
+	var wparams *prisma.WhereParams
+	if params != nil {
+		wparams = &prisma.WhereParams{
+			Where:   params.Where,
+			OrderBy: (*string)(params.OrderBy),
+			Skip:    params.Skip,
+			After:   params.After,
+			Before:  params.Before,
+			First:   params.First,
+			Last:    params.Last,
+		}
+	}
+
+	ret := instance.exec.Client.GetMany(
+		instance.exec,
+		wparams,
+		[3]string{"UserWhereInput", "UserOrderByInput", "User"},
+		"usersFollwing",
+		[]string{"id", "spotifyId", "spotifyTokenAccess", "spotifyTokenRefresh", "spotifyTokenExpiry", "spotifyTokenType"})
+
+	return &UserExecArray{ret}
+}
+
+type UsersListeningToParamsExec struct {
+	Where   *UserWhereInput
+	OrderBy *UserOrderByInput
+	Skip    *int32
+	After   *string
+	Before  *string
+	First   *int32
+	Last    *int32
+}
+
+func (instance *ArtistExec) UsersListeningTo(params *UsersListeningToParamsExec) *UserExecArray {
+	var wparams *prisma.WhereParams
+	if params != nil {
+		wparams = &prisma.WhereParams{
+			Where:   params.Where,
+			OrderBy: (*string)(params.OrderBy),
+			Skip:    params.Skip,
+			After:   params.After,
+			Before:  params.Before,
+			First:   params.First,
+			Last:    params.Last,
+		}
+	}
+
+	ret := instance.exec.Client.GetMany(
+		instance.exec,
+		wparams,
+		[3]string{"UserWhereInput", "UserOrderByInput", "User"},
+		"usersListeningTo",
+		[]string{"id", "spotifyId", "spotifyTokenAccess", "spotifyTokenRefresh", "spotifyTokenExpiry", "spotifyTokenType"})
+
+	return &UserExecArray{ret}
+}
+
+func (instance ArtistExec) Exec(ctx context.Context) (*Artist, error) {
+	var v Artist
+	ok, err := instance.exec.Exec(ctx, &v)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrNoResult
+	}
+	return &v, nil
+}
+
+func (instance ArtistExec) Exists(ctx context.Context) (bool, error) {
+	return instance.exec.Exists(ctx)
+}
+
+type ArtistExecArray struct {
+	exec *prisma.Exec
+}
+
+func (instance ArtistExecArray) Exec(ctx context.Context) ([]Artist, error) {
+	var v []Artist
+	err := instance.exec.ExecArray(ctx, &v)
+	return v, err
+}
+
+type Artist struct {
+	ID        string `json:"id"`
+	SpotifyId string `json:"spotifyId"`
+	Name      string `json:"name"`
+	Uri       string `json:"uri"`
+	Endpoint  string `json:"endpoint"`
+}
+
 type UserExec struct {
 	exec *prisma.Exec
+}
+
+type ArtistsFollowingParamsExec struct {
+	Where   *ArtistWhereInput
+	OrderBy *ArtistOrderByInput
+	Skip    *int32
+	After   *string
+	Before  *string
+	First   *int32
+	Last    *int32
+}
+
+func (instance *UserExec) ArtistsFollowing(params *ArtistsFollowingParamsExec) *ArtistExecArray {
+	var wparams *prisma.WhereParams
+	if params != nil {
+		wparams = &prisma.WhereParams{
+			Where:   params.Where,
+			OrderBy: (*string)(params.OrderBy),
+			Skip:    params.Skip,
+			After:   params.After,
+			Before:  params.Before,
+			First:   params.First,
+			Last:    params.Last,
+		}
+	}
+
+	ret := instance.exec.Client.GetMany(
+		instance.exec,
+		wparams,
+		[3]string{"ArtistWhereInput", "ArtistOrderByInput", "Artist"},
+		"artistsFollowing",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExecArray{ret}
+}
+
+type ListenToParamsExec struct {
+	Where   *ArtistWhereInput
+	OrderBy *ArtistOrderByInput
+	Skip    *int32
+	After   *string
+	Before  *string
+	First   *int32
+	Last    *int32
+}
+
+func (instance *UserExec) ListenTo(params *ListenToParamsExec) *ArtistExecArray {
+	var wparams *prisma.WhereParams
+	if params != nil {
+		wparams = &prisma.WhereParams{
+			Where:   params.Where,
+			OrderBy: (*string)(params.OrderBy),
+			Skip:    params.Skip,
+			After:   params.After,
+			Before:  params.Before,
+			First:   params.First,
+			Last:    params.Last,
+		}
+	}
+
+	ret := instance.exec.Client.GetMany(
+		instance.exec,
+		wparams,
+		[3]string{"ArtistWhereInput", "ArtistOrderByInput", "Artist"},
+		"listenTo",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExecArray{ret}
 }
 
 func (instance UserExec) Exec(ctx context.Context) (*User, error) {
@@ -414,6 +1270,166 @@ type User struct {
 	SpotifyTokenRefresh string `json:"spotifyTokenRefresh"`
 	SpotifyTokenExpiry  string `json:"spotifyTokenExpiry"`
 	SpotifyTokenType    string `json:"spotifyTokenType"`
+}
+
+type ArtistConnectionExec struct {
+	exec *prisma.Exec
+}
+
+func (instance *ArtistConnectionExec) PageInfo() *PageInfoExec {
+	ret := instance.exec.Client.GetOne(
+		instance.exec,
+		nil,
+		[2]string{"", "PageInfo"},
+		"pageInfo",
+		[]string{"hasNextPage", "hasPreviousPage", "startCursor", "endCursor"})
+
+	return &PageInfoExec{ret}
+}
+
+func (instance *ArtistConnectionExec) Edges() *ArtistEdgeExecArray {
+	edges := instance.exec.Client.GetMany(
+		instance.exec,
+		nil,
+		[3]string{"ArtistWhereInput", "ArtistOrderByInput", "ArtistEdge"},
+		"edges",
+		[]string{"cursor"})
+
+	nodes := edges.Client.GetMany(
+		edges,
+		nil,
+		[3]string{"", "", "Artist"},
+		"node",
+		[]string{"id", "createdAt", "updatedAt", "name", "desc"})
+
+	return &ArtistEdgeExecArray{nodes}
+}
+
+func (instance *ArtistConnectionExec) Aggregate(ctx context.Context) (*Aggregate, error) {
+	ret := instance.exec.Client.GetOne(
+		instance.exec,
+		nil,
+		[2]string{"", "AggregateArtist"},
+		"aggregate",
+		[]string{"count"})
+
+	var v Aggregate
+	_, err := ret.Exec(ctx, &v)
+	return &v, err
+}
+
+func (instance ArtistConnectionExec) Exec(ctx context.Context) (*ArtistConnection, error) {
+	var v ArtistConnection
+	ok, err := instance.exec.Exec(ctx, &v)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrNoResult
+	}
+	return &v, nil
+}
+
+func (instance ArtistConnectionExec) Exists(ctx context.Context) (bool, error) {
+	return instance.exec.Exists(ctx)
+}
+
+type ArtistConnectionExecArray struct {
+	exec *prisma.Exec
+}
+
+func (instance ArtistConnectionExecArray) Exec(ctx context.Context) ([]ArtistConnection, error) {
+	var v []ArtistConnection
+	err := instance.exec.ExecArray(ctx, &v)
+	return v, err
+}
+
+type ArtistConnection struct {
+	PageInfo PageInfo     `json:"pageInfo"`
+	Edges    []ArtistEdge `json:"edges"`
+}
+
+type PageInfoExec struct {
+	exec *prisma.Exec
+}
+
+func (instance PageInfoExec) Exec(ctx context.Context) (*PageInfo, error) {
+	var v PageInfo
+	ok, err := instance.exec.Exec(ctx, &v)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrNoResult
+	}
+	return &v, nil
+}
+
+func (instance PageInfoExec) Exists(ctx context.Context) (bool, error) {
+	return instance.exec.Exists(ctx)
+}
+
+type PageInfoExecArray struct {
+	exec *prisma.Exec
+}
+
+func (instance PageInfoExecArray) Exec(ctx context.Context) ([]PageInfo, error) {
+	var v []PageInfo
+	err := instance.exec.ExecArray(ctx, &v)
+	return v, err
+}
+
+type PageInfo struct {
+	HasNextPage     bool    `json:"hasNextPage"`
+	HasPreviousPage bool    `json:"hasPreviousPage"`
+	StartCursor     *string `json:"startCursor,omitempty"`
+	EndCursor       *string `json:"endCursor,omitempty"`
+}
+
+type ArtistEdgeExec struct {
+	exec *prisma.Exec
+}
+
+func (instance *ArtistEdgeExec) Node() *ArtistExec {
+	ret := instance.exec.Client.GetOne(
+		instance.exec,
+		nil,
+		[2]string{"", "Artist"},
+		"node",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExec{ret}
+}
+
+func (instance ArtistEdgeExec) Exec(ctx context.Context) (*ArtistEdge, error) {
+	var v ArtistEdge
+	ok, err := instance.exec.Exec(ctx, &v)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrNoResult
+	}
+	return &v, nil
+}
+
+func (instance ArtistEdgeExec) Exists(ctx context.Context) (bool, error) {
+	return instance.exec.Exists(ctx)
+}
+
+type ArtistEdgeExecArray struct {
+	exec *prisma.Exec
+}
+
+func (instance ArtistEdgeExecArray) Exec(ctx context.Context) ([]ArtistEdge, error) {
+	var v []ArtistEdge
+	err := instance.exec.ExecArray(ctx, &v)
+	return v, err
+}
+
+type ArtistEdge struct {
+	Node   Artist `json:"node"`
+	Cursor string `json:"cursor"`
 }
 
 type UserConnectionExec struct {
@@ -493,43 +1509,6 @@ type UserConnection struct {
 	Edges    []UserEdge `json:"edges"`
 }
 
-type PageInfoExec struct {
-	exec *prisma.Exec
-}
-
-func (instance PageInfoExec) Exec(ctx context.Context) (*PageInfo, error) {
-	var v PageInfo
-	ok, err := instance.exec.Exec(ctx, &v)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, ErrNoResult
-	}
-	return &v, nil
-}
-
-func (instance PageInfoExec) Exists(ctx context.Context) (bool, error) {
-	return instance.exec.Exists(ctx)
-}
-
-type PageInfoExecArray struct {
-	exec *prisma.Exec
-}
-
-func (instance PageInfoExecArray) Exec(ctx context.Context) ([]PageInfo, error) {
-	var v []PageInfo
-	err := instance.exec.ExecArray(ctx, &v)
-	return v, err
-}
-
-type PageInfo struct {
-	HasNextPage     bool    `json:"hasNextPage"`
-	HasPreviousPage bool    `json:"hasPreviousPage"`
-	StartCursor     *string `json:"startCursor,omitempty"`
-	EndCursor       *string `json:"endCursor,omitempty"`
-}
-
 type UserEdgeExec struct {
 	exec *prisma.Exec
 }
@@ -574,6 +1553,102 @@ func (instance UserEdgeExecArray) Exec(ctx context.Context) ([]UserEdge, error) 
 type UserEdge struct {
 	Node   User   `json:"node"`
 	Cursor string `json:"cursor"`
+}
+
+type ArtistSubscriptionPayloadExec struct {
+	exec *prisma.Exec
+}
+
+func (instance *ArtistSubscriptionPayloadExec) Node() *ArtistExec {
+	ret := instance.exec.Client.GetOne(
+		instance.exec,
+		nil,
+		[2]string{"", "Artist"},
+		"node",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistExec{ret}
+}
+
+func (instance *ArtistSubscriptionPayloadExec) PreviousValues() *ArtistPreviousValuesExec {
+	ret := instance.exec.Client.GetOne(
+		instance.exec,
+		nil,
+		[2]string{"", "ArtistPreviousValues"},
+		"previousValues",
+		[]string{"id", "spotifyId", "name", "uri", "endpoint"})
+
+	return &ArtistPreviousValuesExec{ret}
+}
+
+func (instance ArtistSubscriptionPayloadExec) Exec(ctx context.Context) (*ArtistSubscriptionPayload, error) {
+	var v ArtistSubscriptionPayload
+	ok, err := instance.exec.Exec(ctx, &v)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrNoResult
+	}
+	return &v, nil
+}
+
+func (instance ArtistSubscriptionPayloadExec) Exists(ctx context.Context) (bool, error) {
+	return instance.exec.Exists(ctx)
+}
+
+type ArtistSubscriptionPayloadExecArray struct {
+	exec *prisma.Exec
+}
+
+func (instance ArtistSubscriptionPayloadExecArray) Exec(ctx context.Context) ([]ArtistSubscriptionPayload, error) {
+	var v []ArtistSubscriptionPayload
+	err := instance.exec.ExecArray(ctx, &v)
+	return v, err
+}
+
+type ArtistSubscriptionPayload struct {
+	Mutation      MutationType `json:"mutation"`
+	Node          *Artist      `json:"node,omitempty"`
+	UpdatedFields []string     `json:"updatedFields,omitempty"`
+}
+
+type ArtistPreviousValuesExec struct {
+	exec *prisma.Exec
+}
+
+func (instance ArtistPreviousValuesExec) Exec(ctx context.Context) (*ArtistPreviousValues, error) {
+	var v ArtistPreviousValues
+	ok, err := instance.exec.Exec(ctx, &v)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrNoResult
+	}
+	return &v, nil
+}
+
+func (instance ArtistPreviousValuesExec) Exists(ctx context.Context) (bool, error) {
+	return instance.exec.Exists(ctx)
+}
+
+type ArtistPreviousValuesExecArray struct {
+	exec *prisma.Exec
+}
+
+func (instance ArtistPreviousValuesExecArray) Exec(ctx context.Context) ([]ArtistPreviousValues, error) {
+	var v []ArtistPreviousValues
+	err := instance.exec.ExecArray(ctx, &v)
+	return v, err
+}
+
+type ArtistPreviousValues struct {
+	ID        string `json:"id"`
+	SpotifyId string `json:"spotifyId"`
+	Name      string `json:"name"`
+	Uri       string `json:"uri"`
+	Endpoint  string `json:"endpoint"`
 }
 
 type UserSubscriptionPayloadExec struct {
