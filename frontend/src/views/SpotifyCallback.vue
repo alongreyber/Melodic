@@ -38,6 +38,7 @@ export default class SpotifyCallback extends Vue {
 	    component.$router.push({name: "logged_in"});
 	}).catch(function(error: any) {
 	    console.log("Recieved error:")
+	    console.log(error)
 	    console.log(error.response)
 	});
 

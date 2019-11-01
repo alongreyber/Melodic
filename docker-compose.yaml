@@ -1,31 +1,11 @@
 version: '3.7'
 services:
-  prisma:
-    image: prismagraphql/prisma:1.34
-    restart: always
-    ports:
-      - '4466:4466'
-    depends_on:
-      - postgres
-    environment:
-      PRISMA_CONFIG: |
-        managementApiSecret: my-secret-0000
-        port: 4466
-        databases:
-          default:
-            rawAccess: true
-            connector: postgres
-            migrations: true
-            host: postgres
-            port: 5432
-            user: prisma
-            password: prisma
   postgres:
     image: postgres
     restart: always
     environment:
-      POSTGRES_USER: prisma
-      POSTGRES_PASSWORD: prisma
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     volumes:
       - postgres:/var/lib/postgresql/data
   frontend:
@@ -43,9 +23,18 @@ services:
       context: backend/
       target: build-stage
     depends_on:
-      - prisma
+      - postgres
     ports:
       - '5000:5000'
+      - '40000:40000' # For Delve debugging
+
+    # These options are required for Delve debugging
+    # TODO disable these in prod
+    security_opt:
+      - apparmor:unconfined
+    cap_add:
+      - SYS_PTRACE
+
     volumes:
       - './backend:/app'
     environment:

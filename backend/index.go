@@ -4,26 +4,28 @@ import (
     "net/http"
     mux "github.com/gorilla/mux"
     handlers "github.com/gorilla/handlers"
-    prisma "melodic-backend/prisma-client"
     "os"
     spotify "github.com/zmb3/spotify"
+    "github.com/jinzhu/gorm"
+    _ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 type App struct {
-    db *prisma.Client
+    db *gorm.DB
     spotifyAuth *spotify.Authenticator
 }
 
 func main() {
-    options := prisma.Options{
-	Endpoint: "http://prisma:4466",
-	Secret: "my-secret-0000",
-    }
-    db := prisma.New(&options)
-    app := App{db: db}
+    db, err := gorm.Open("postgres",
+		"host=postgres port=5432 user=postgres dbname=gorm password=password")
+    defer db.Close()
 
     spotifyAuth := spotify.NewAuthenticator("http://localhost:8080/spotify_callback", spotify.ScopeUserReadPrivate, spotify.ScopeUserReadEmail)
-    app.spotifyAuth = &spotifyAuth
+
+    app := App{db: db,
+	       spotifyAuth: &spotifyAuth}
+
+    db.AutoMigrate(&User{})
 
     r := mux.NewRouter()
     r.Use(app.AddHeaders)
@@ -37,7 +39,7 @@ func main() {
     // Log all requests and responses to stdout for debugging
     loggedRouter := handlers.LoggingHandler(os.Stdout, r)
     // Run
-    err := http.ListenAndServe(":5000", loggedRouter)
+    err = http.ListenAndServe(":5000", loggedRouter)
     if err != nil {
 	panic(err)
     }

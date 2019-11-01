@@ -3,7 +3,6 @@ package main
 import (
     "encoding/json"
     "net/http"
-    prisma "melodic-backend/prisma-client"
     jwt "github.com/dgrijalva/jwt-go"
     "time"
     "context"
@@ -14,7 +13,7 @@ import (
 // Contains any claims stored in the JWT
 // that is associated with the current session
 type Claims struct {
-    Id string `json:"id"`
+    ID uint
     jwt.StandardClaims
 }
 
@@ -36,19 +35,22 @@ func getClaims(ctx context.Context) (*Claims, bool) {
 }
 
 // Add the user object to context
-func addUser(ctx context.Context, u prisma.User) (context.Context) {
+func addUser(ctx context.Context, u User) (context.Context) {
     return context.WithValue(ctx, "user", u)
 }
 
 // Pull the user object out of the context variable
 // if it exists
-func getUser(ctx context.Context) (*prisma.User, bool) {
+func getUser(ctx context.Context) User {
     userUntyped := ctx.Value("user")
     if userUntyped == nil {
-	return nil, false
+	panic("No user in context")
     }
-    user, ok := userUntyped.(prisma.User)
-    return &user, ok
+    user, ok := userUntyped.(User)
+    if !ok {
+	panic("Failed to coerce user type")
+    }
+    return user
 }
 
 
@@ -79,26 +81,18 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
 	errorResponse(w, "Could not get spotify user info", http.StatusBadRequest)
 	return
     }
-    user, err := app.db.User(prisma.UserWhereUniqueInput{
-	SpotifyId: &spotify_user.ID,
-    }).Exec( r.Context() )
-    if err != nil {
-	// Create a new user
-	// Remove the monotonic clock from the expiration time because 
-	// Go can't fucking parse it because it's a shit language
-	expiryNoMonotonic := spotify_token.Expiry.Round(0) 
-	expiryString, err := json.Marshal(expiryNoMonotonic)
-	if err != nil {
-	    panic(err)
-	}
-	user, err = app.db.CreateUser(prisma.UserCreateInput{
-	    SpotifyId: spotify_user.ID,
+    var user User
+    app.db.Where(&User{SpotifyID: spotify_user.ID}).First(&user)
+    if app.db.Error != nil {
+	user = User{
+	    SpotifyID: spotify_user.ID,
 	    SpotifyTokenAccess: spotify_token.AccessToken,
 	    SpotifyTokenRefresh: spotify_token.RefreshToken,
-	    SpotifyTokenExpiry: string(expiryString),
+	    SpotifyTokenExpiry: spotify_token.Expiry,
 	    SpotifyTokenType: spotify_token.TokenType,
-	}).Exec( r.Context() )
-	if err != nil {
+	}
+	app.db.Create(user)
+	if app.db.Error != nil {
 	    fmt.Println(err)
 	    errorResponse(w, "Could not create new user", http.StatusInternalServerError)
 	    return
@@ -107,7 +101,7 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
     // Create JWT for app login
     expirationTime := time.Now().Add(1 * time.Hour)
     claims := &Claims{
-	Id: user.ID,
+	ID: user.ID,
 	StandardClaims: jwt.StandardClaims{
 	    // In jwt, the expiry time is expressed in unix milliseconds
 	    ExpiresAt: expirationTime.Unix(),
@@ -134,10 +128,7 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
-    user, ok := getUser(r.Context())
-    if !ok {
-	panic("No user")
-    }
+    user := getUser(r.Context())
     token, ok := getToken(user)
     if !ok {
 	panic("Couldn't make token")
@@ -145,14 +136,15 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     spotifyClient := app.spotifyAuth.NewClient(token)
 
     // Get followed artists and compare to existing artistsFollowing
-    apiFollowedAritsts, err := spotifyClient.CurrentUsersFollowedArtists().Artists
+    _, err := spotifyClient.CurrentUsersFollowedArtists()
     if err != nil {
 	panic(err)
     }
 
     // If we haven't initialized this list, do so now
-    userArtistsFollowing, err := app.db.ArtistsFollowing(
-	&prisma.ArtistsFollowingParams{
+    /*
+    userArtistsFollowing, err := app.db.Artists(
+	&prisma.ArtistsParams{
 	    Where: &prisma.UserWhere
 
 	}).Exec( r.Context() )
@@ -164,7 +156,7 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 	    // Create artist
 	    newArtists, err := app.db.CreateArtist(
 		prisma.ArtistCreateInput{
-		    SpotifyId: apiArtist.Id,
+		    SpotifyID: apiArtist.ID,
 		    Name: apiArtist.Name,
 		    Uri: apiAritst.URI,
 		    Endpoint: apiArtist.Endpoint,
@@ -187,30 +179,23 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 	    }
 	}
     }
+    */
 
 }
 
 // TODO This should return error not bool
-func getToken(user *prisma.User) (*oauth2.Token, bool) {
-    var expiry time.Time
-    err := json.Unmarshal([]byte(user.SpotifyTokenExpiry), &expiry)
-    if err != nil {
-	return nil, false
-    }
+func getToken(user User) (*oauth2.Token, bool) {
     token := oauth2.Token{
 	AccessToken:  user.SpotifyTokenAccess,
 	RefreshToken: user.SpotifyTokenRefresh,
-	Expiry:       expiry,
+	Expiry:       user.SpotifyTokenExpiry,
 	TokenType:    user.SpotifyTokenType,
     }
     return &token, true
 }
 
 func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {
-    user, ok := getUser(r.Context())
-    if !ok {
-	panic("No user")
-    }
+    user := getUser(r.Context())
     token, ok := getToken(user)
     if !ok {
 	panic("Couldn't make token")
@@ -289,15 +274,16 @@ func (app App) GetUserMiddleware(next http.Handler) http.Handler {
 	    return
 	}
 	
-	user, err := app.db.User(prisma.UserWhereUniqueInput{
-	  ID: &claims.Id,
-	}).Exec(r.Context())
-	if err != nil {
+	var user User
+	userQuery := &User{}
+	userQuery.ID = claims.ID
+	app.db.Where(userQuery).First(&user)
+	if app.db.Error != nil {
 	    errorResponse(w, "Couldn't get user", http.StatusInternalServerError)
 	    return
 	}
 	// Add user to context
-	ctx := addUser(r.Context(), *user)
+	ctx := addUser(r.Context(), user)
 	next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
