@@ -5,25 +5,27 @@
 </template>
 
 <script lang="ts">
+const axios = require('axios');
 import { Component, Vue } from 'vue-property-decorator';
 
 @Component
 export default class LoginWithSpotify extends Vue {
-    login() {
-	const redirect_uri = "http://localhost:8080/spotify_callback"
-	const client_id = "e9eb61d2a082412caa493f4c9ef86774"
+    redirectURI = ""
+    state = ""
 
-	var state = Math.random().toString(36).substring(2, 15);
+    mounted() {
+	let component = this;
+	axios.get('http://localhost:5000/api/getCallbackURL').then(function(response: any) {
+	    component.redirectURI = response.data.data.url;
+	    component.state = response.data.data.state;
+	}).catch(function(error: any) {
+	    // Dunno what to do here
+	});
+    }
+    login() {
 	// Save state in a cookie
-	document.cookie = "spotifyState=" + state;
-	var scopes = 'user-read-private user-read-email';
-	// Redirect
-	window.location.href = 'https://accounts.spotify.com/authorize' +
-	    '?response_type=code' +
-	    '&client_id=' + client_id +
-	    (scopes ? '&scope=' + encodeURIComponent(scopes) : '') +
-	    '&state=' + state +
-	    '&redirect_uri=' + encodeURIComponent(redirect_uri);
+	document.cookie = "spotifyState=" + this.state;
+	window.location.href = this.redirectURI;
     }
 }
 </script>

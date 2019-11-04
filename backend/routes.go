@@ -8,6 +8,8 @@ import (
     "context"
     oauth2 "golang.org/x/oauth2"
     "fmt"
+    "github.com/jinzhu/gorm"
+    uuid "github.com/google/uuid"
 )
 
 // Contains any claims stored in the JWT
@@ -58,17 +60,26 @@ func (app App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
     okResponse(w, "Check success!")
 }
 
+func (app App) CallbackURL(w http.ResponseWriter, r *http.Request) {
+    state := uuid.New()
+    url := app.spotifyAuth.AuthURL(state.String())
+    response := make(map[string]string)
+    response["url"] = url
+    response["state"] = state.String()
+    okResponse(w, response)
+}
+
 func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
     // For spotify login we are given a code and need to exchange it for a token
     state, ok := r.URL.Query()["state"]
     if !ok || len(state) != 1 {
-	errorResponse(w, "No state given", http.StatusBadRequest)
+	errorResponse(w, NewHTTPError(nil, "No state given", http.StatusUnauthorized))
 	return
     }
     // We're not validating state here because it has been verified on the frontend
     spotify_token, err := app.spotifyAuth.Token(state[0], r)
     if err != nil {
-	errorResponse(w, "Could not get token", http.StatusBadRequest)
+	errorResponse(w, fmt.Errorf("Could not get token: %v", err) )
 	return
     }
     // create a client using the specified token
@@ -78,12 +89,12 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
     // If not, create one
     spotify_user, err := client.CurrentUser()
     if err != nil {
-	errorResponse(w, "Could not get spotify user info", http.StatusBadRequest)
+	errorResponse(w, fmt.Errorf("Could not get spotify user info: %v", err) )
 	return
     }
     var user User
-    app.db.Where(&User{SpotifyID: spotify_user.ID}).First(&user)
-    if app.db.Error != nil {
+    err = app.db.Where(&User{SpotifyID: spotify_user.ID}).First(&user).Error
+    if gorm.IsRecordNotFoundError(err) {
 	user = User{
 	    SpotifyID: spotify_user.ID,
 	    SpotifyTokenAccess: spotify_token.AccessToken,
@@ -91,12 +102,13 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
 	    SpotifyTokenExpiry: spotify_token.Expiry,
 	    SpotifyTokenType: spotify_token.TokenType,
 	}
-	app.db.Create(user)
-	if app.db.Error != nil {
-	    fmt.Println(err)
-	    errorResponse(w, "Could not create new user", http.StatusInternalServerError)
-	    return
+	err = app.db.Create(&user).Error
+	if err != nil {
+	    errorResponse(w, fmt.Errorf("Could not create new user: %v", err))
 	}
+    } else if err != nil {
+	errorResponse(w, fmt.Errorf("Error finding user in DB: %v", err) )
+	return
     }
     // Create JWT for app login
     expirationTime := time.Now().Add(1 * time.Hour)
@@ -113,7 +125,7 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
     tokenString, err := token.SignedString(jwtKey)
 
     if err != nil {
-	errorResponse(w, "Error creating JWT", http.StatusInternalServerError)
+	errorResponse(w, fmt.Errorf("Error creating JWT: %v", err) )
 	return
     }
     // Return the token to the user
@@ -135,12 +147,48 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     }
     spotifyClient := app.spotifyAuth.NewClient(token)
 
-    // Get followed artists and compare to existing artistsFollowing
-    _, err := spotifyClient.CurrentUsersFollowedArtists()
-    if err != nil {
-	panic(err)
-    }
+    fmt.Printf("User: %i\n", user.ID)
 
+    // Load current artists
+    app.db.Model(&user).Related(&user.ArtistsFollowing, "ArtistsFollowing")
+    // We haven't initialized this list yet. Let's do that now
+    if len(user.ArtistsFollowing) == 0 {
+	cursor := ""
+	for {
+	    spotifyFollowedArtistsData, err := spotifyClient.CurrentUsersFollowedArtistsOpt(50, cursor)
+	    if err != nil {
+		errorResponse(w, fmt.Errorf("Error from spotify: %v", err))
+		return
+	    }
+	    // spotifyFollowedArtistsData is a paged data structure
+	    for _, spotifyArtist := range(spotifyFollowedArtistsData.Artists) {
+		// Get artist from DB. If it doesn't exist, create it
+		alreadyExistsQuery := &Artist{SpotifyID: spotifyArtist.ID.String()}
+		var artist Artist
+		err := app.db.Where(alreadyExistsQuery).First(&artist).Error
+		if gorm.IsRecordNotFoundError(err) {
+		    artist = Artist{
+			SpotifyID: spotifyArtist.ID.String(),
+			Name: spotifyArtist.Name,
+			URI: string(spotifyArtist.URI),
+			Endpoint: spotifyArtist.Endpoint,
+		    }
+		}
+		// Add artist to user follows list
+		user.ArtistsFollowing = append(user.ArtistsFollowing, artist)
+	    }
+	    // If there is another page, query again and continue
+	    cursor = spotifyFollowedArtistsData.Cursor.After
+	    if cursor == "" {
+		break
+	    }
+	} // for each page
+	// Save associations
+	err := app.db.Model(&user).Association("ArtistsFollowing").Error
+	if err != nil {
+	    errorResponse(w, fmt.Errorf("Could not enter association mode: %v", err))
+	}
+    } 
     // If we haven't initialized this list, do so now
     /*
     userArtistsFollowing, err := app.db.Artists(
@@ -180,7 +228,6 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 	}
     }
     */
-
 }
 
 // TODO This should return error not bool
@@ -203,23 +250,13 @@ func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {
     client := app.spotifyAuth.NewClient(token)
     spotifyUser, err := client.CurrentUser()
     if err != nil {
-	errorResponse(w, "Could not get current user info", http.StatusInternalServerError)
+	errorResponse(w, fmt.Errorf("Could not get current user info: %v", err) ) 
 	return
     }
 
 
     okResponse(w, spotifyUser)
     
-}
-
-func errorResponse(w http.ResponseWriter, err string, status int) {
-    // Create this for a json response
-    response := make(map[string]interface{})
-    response["ok"] = false
-    response["error"] = err
-    w.WriteHeader(status)
-    w.Header().Add("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(response)
 }
 
 func okResponse(w http.ResponseWriter, data interface{}) {
@@ -237,7 +274,7 @@ func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {
     claimsContext := r.Context().Value("claims")
     claims := claimsContext.(*Claims)
     if time.Unix(claims.ExpiresAt, 0).Sub(time.Now())  > 30*time.Second {
-	errorResponse(w, "Token not expired", http.StatusBadRequest)
+	errorResponse(w, NewHTTPError(nil, "Token not expired", http.StatusBadRequest))
 	return
     } 
 
@@ -246,7 +283,7 @@ func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
     tokenString, err := token.SignedString(jwtKey)
     if err != nil {
-	errorResponse(w, "Error creating new token", http.StatusInternalServerError)
+	errorResponse(w, fmt.Errorf("Error creating new token: %v", err))
 	return
     }
     http.SetCookie(w, &http.Cookie{
@@ -279,7 +316,7 @@ func (app App) GetUserMiddleware(next http.Handler) http.Handler {
 	userQuery.ID = claims.ID
 	app.db.Where(userQuery).First(&user)
 	if app.db.Error != nil {
-	    errorResponse(w, "Couldn't get user", http.StatusInternalServerError)
+	    errorResponse(w, fmt.Errorf("Couldn't get user: %v", app.db.Error))
 	    return
 	}
 	// Add user to context
@@ -291,7 +328,7 @@ func (app App) GetUserMiddleware(next http.Handler) http.Handler {
 func (app App) JwtAuthentication(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// Check if this route needs auth
-	notAuth := []string{"/api/login", "/api/healthCheck"}
+	notAuth := []string{"/api/login", "/api/healthCheck", "/api/getCallbackURL"}
 	requestPath := r.URL.Path
 	for _, value := range notAuth {
 	    if value == requestPath {
@@ -304,11 +341,12 @@ func (app App) JwtAuthentication(next http.Handler) http.Handler {
 	c, err := r.Cookie("token")
 	if err != nil {
 	    if err == http.ErrNoCookie {
-		errorResponse(w, "No token found", http.StatusUnauthorized)
+		errorResponse(w, NewHTTPError(err, "No token found", http.StatusUnauthorized))
+		return
+	    } else {
+		errorResponse(w, fmt.Errorf("Bad request: %v", err) )
 		return
 	    }
-	    errorResponse(w, "Bad request", http.StatusBadRequest)
-	    return
 	}
 
 	// Parse token and validate
@@ -320,14 +358,15 @@ func (app App) JwtAuthentication(next http.Handler) http.Handler {
 
 	if err != nil {
 	    if err == jwt.ErrSignatureInvalid {
-		errorResponse(w, "Invailid JWT Signature", http.StatusUnauthorized)
+		errorResponse(w, NewHTTPError(err, "Invalid JWT Signature", http.StatusUnauthorized))
+		return
+	    } else {
+		errorResponse(w, fmt.Errorf("Bad request: %v", err))
 		return
 	    }
-	    errorResponse(w, "Bad request", http.StatusBadRequest)
-	    return
 	}
 	if !token.Valid {
-	    errorResponse(w, "Invalid Token", http.StatusUnauthorized)
+	    errorResponse(w, NewHTTPError(err, "Invalid Token", http.StatusUnauthorized))
 	    return
 	}
 

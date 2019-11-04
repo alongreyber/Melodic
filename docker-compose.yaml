@@ -6,6 +6,8 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: gorm
+      PGPASSWORD: password
     volumes:
       - postgres:/var/lib/postgresql/data
   frontend:
@@ -26,15 +28,6 @@ services:
       - postgres
     ports:
       - '5000:5000'
-      - '40000:40000' # For Delve debugging
-
-    # These options are required for Delve debugging
-    # TODO disable these in prod
-    security_opt:
-      - apparmor:unconfined
-    cap_add:
-      - SYS_PTRACE
-
     volumes:
       - './backend:/app'
     environment:
@@ -46,5 +39,13 @@ services:
       - './frontend:/app'
     # Watch for changes to the sass folder and recompile sass on any changes
     command: sass --style compressed --watch /app/src/sass/bulma.scss:/app/public/main.css
+  omnidb: # workbench for inspecting database
+    image: taivokasper/omnidb
+    ports:
+      - '9876:8080'
+      - '25482:25482' # Web socket
+    volumes:
+      - omnidb:/etc/omnidb
 volumes:
-  postgres: 
+  postgres:
+  omnidb:

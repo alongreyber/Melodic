@@ -5,7 +5,7 @@ prod:
 debug:
 	~/go/bin/dlv 
 
-prisma-deploy:
-	export PRISMA_MANAGEMENT_API_SECRET=my-secret-0000 
-	prisma deploy
-	prisma generate
+VOLUMES = $(shell docker volume ls -q)
+remove-volumes:
+	docker-compose down --volumes
+	docker volume rm $(VOLUMES)

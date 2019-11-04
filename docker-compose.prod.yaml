@@ -6,3 +6,5 @@ services:
   backend:
     build:
       target: production-stage
+    environment:
+      - RETURN_STACKTRACE=true
