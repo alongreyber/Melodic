@@ -5,12 +5,26 @@ import (
     "time"
 )
 
+// Reference to a spotify image
+type SpotifyImage struct {
+    gorm.Model
+    ArtistID uint
+
+    Height int
+    Width int
+    URL string
+}
+
 type Artist struct {
     gorm.Model
     SpotifyID string
     Name string
     URI string
     Endpoint string
+    Images []SpotifyImage
+
+    UsersFollowing []User `gorm:"many2many:user_following_artist"`
+    UsersListenTo []User `gorm:"many2many:user_listento_artist"`
 }
 
 type User struct {
@@ -21,7 +35,7 @@ type User struct {
     SpotifyTokenExpiry time.Time
     SpotifyTokenType string
 
-    ArtistsFollowing []Artist `gorm:"many2many:user_artists_following`
-    ArtistsListenTo []Artist `gorm:"many2many:user_artist_listento"`
+    ArtistsFollowing []Artist `gorm:"many2many:user_following_artist"`
+    ArtistsListenTo []Artist `gorm:"many2many:user_listento_artist"`
 }
 

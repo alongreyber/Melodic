@@ -6,8 +6,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import LoginWithSpotify from '@/components/LoginWithSpotify.vue'; // @ is an alias to /src
+import { Component, Vue } from "vue-property-decorator";
+import LoginWithSpotify from "@/components/LoginWithSpotify.vue"; // @ is an alias to /src
 
 @Component({
   components: {

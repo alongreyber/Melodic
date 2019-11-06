@@ -10,6 +10,7 @@ import (
     "fmt"
     "github.com/jinzhu/gorm"
     uuid "github.com/google/uuid"
+    spotify "github.com/zmb3/spotify"
 )
 
 // Contains any claims stored in the JWT
@@ -139,6 +140,45 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func GetAllFollowingArtists(spotifyClient spotify.Client) (*[]spotify.FullArtist, error) {
+    allArtists := make([]spotify.FullArtist, 1)
+    cursor := ""
+    for { // Iterate over the pages
+	spotifyFollowedArtistsData, err := spotifyClient.CurrentUsersFollowedArtistsOpt(50, cursor)
+	if err != nil {
+	    return nil, fmt.Errorf("Error from spotify: %v", err)
+	}
+	allArtists = append(allArtists, spotifyFollowedArtistsData.Artists...)
+	// Move to next page
+	cursor = spotifyFollowedArtistsData.Cursor.After
+	if cursor == "" {
+	    break
+	}
+    }
+    return &allArtists, nil
+
+}
+
+func MakeArtist(spotifyArtist spotify.FullArtist) Artist {
+    images := make([]SpotifyImage, 1)
+    for _, im := range(spotifyArtist.Images) {
+	images = append(images, SpotifyImage{
+	    Height: im.Height,
+	    Width: im.Width,
+	    URL: im.URL,
+	})
+    }
+    artist := Artist{
+	SpotifyID: spotifyArtist.ID.String(),
+	Name: spotifyArtist.Name,
+	URI: string(spotifyArtist.URI),
+	Endpoint: spotifyArtist.Endpoint,
+	Images: images,
+    }
+    return artist
+
+}
+
 func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     user := getUser(r.Context())
     token, ok := getToken(user)
@@ -147,87 +187,97 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     }
     spotifyClient := app.spotifyAuth.NewClient(token)
 
-    fmt.Printf("User: %i\n", user.ID)
+    // Load following and listento artists
+    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsListenTo.Images").First(&user, user.ID).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Couldn't load user's artists from db: %v", err))
+    }
 
-    // Load current artists
-    app.db.Model(&user).Related(&user.ArtistsFollowing, "ArtistsFollowing")
-    // We haven't initialized this list yet. Let's do that now
+    // Get all artists in DB
+    var allArtists []Artist
+    err = app.db.Find(&allArtists).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err))
+    }
+
+    // Get current artists from spotify
+    SpotifyFollowingArtists, err := GetAllFollowingArtists(spotifyClient)
+    if err != nil {
+	errorResponse(w, err)
+    }
+
+    // If we haven't initialized this list yet. Let's do that now
     if len(user.ArtistsFollowing) == 0 {
-	cursor := ""
-	for {
-	    spotifyFollowedArtistsData, err := spotifyClient.CurrentUsersFollowedArtistsOpt(50, cursor)
-	    if err != nil {
-		errorResponse(w, fmt.Errorf("Error from spotify: %v", err))
-		return
+	// spotifyFollowedArtistsData is a paged data structure
+	for _, spotifyArtist := range(*SpotifyFollowingArtists) {
+	    // Get artist from DB. If it doesn't exist, create it
+	    var artist *Artist
+	    for _, a := range(allArtists) {
+		if(spotifyArtist.ID.String() == a.SpotifyID) {
+		    artist = &a
+		    break
+		}
 	    }
-	    // spotifyFollowedArtistsData is a paged data structure
-	    for _, spotifyArtist := range(spotifyFollowedArtistsData.Artists) {
-		// Get artist from DB. If it doesn't exist, create it
-		alreadyExistsQuery := &Artist{SpotifyID: spotifyArtist.ID.String()}
-		var artist Artist
-		err := app.db.Where(alreadyExistsQuery).First(&artist).Error
-		if gorm.IsRecordNotFoundError(err) {
-		    artist = Artist{
-			SpotifyID: spotifyArtist.ID.String(),
-			Name: spotifyArtist.Name,
-			URI: string(spotifyArtist.URI),
-			Endpoint: spotifyArtist.Endpoint,
+	    if artist == nil {
+		// Going to need to create it
+		artistVal := MakeArtist(spotifyArtist)
+		artist = &artistVal
+	    }
+	    // Add artist to user follows list
+	    user.ArtistsFollowing = append(user.ArtistsFollowing, *artist)
+	}
+	// Save associations
+	err = app.db.Save(&user).Error
+	if err != nil {
+	    errorResponse(w, fmt.Errorf("Could not save user: %v", err))
+	}
+    } else {
+	// Now what we do is check for any new artists
+	// If we've followed new artists add them to the "listen to" list
+
+	// Get all artists in DB
+	var allArtists []Artist
+	err = app.db.Find(&allArtists).Error
+	if err != nil {
+	    errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err))
+	}
+
+	// Loop over artists and see if any have been added
+	for _, spotifyArtist := range(*SpotifyFollowingArtists) {
+	    inList := false
+	    for _, myArtist := range(user.ArtistsFollowing) {
+		if myArtist.SpotifyID == spotifyArtist.ID.String() {
+		    inList = true
+		    break
+		}
+	    }
+	    // If an artist has been added, put it on the ArtistsListenTo
+	    if !inList {
+		// Add the artist to the DB if it doesn't exist
+		var artist *Artist
+		for _, a := range(allArtists) {
+		    if(spotifyArtist.ID.String() == a.SpotifyID) {
+			artist = &a
+			break
 		    }
 		}
-		// Add artist to user follows list
-		user.ArtistsFollowing = append(user.ArtistsFollowing, artist)
+		if artist == nil {
+		    // Going to need to create it
+		    artistVal := MakeArtist(spotifyArtist)
+		    artist = &artistVal
+		}
+		// Add also to user
+		user.ArtistsFollowing = append(user.ArtistsFollowing, *artist)
+		user.ArtistsListenTo = append(user.ArtistsListenTo, *artist)
 	    }
-	    // If there is another page, query again and continue
-	    cursor = spotifyFollowedArtistsData.Cursor.After
-	    if cursor == "" {
-		break
-	    }
-	} // for each page
-	// Save associations
-	err := app.db.Model(&user).Association("ArtistsFollowing").Error
+	}
+	err = app.db.Save(&user).Error
 	if err != nil {
-	    errorResponse(w, fmt.Errorf("Could not enter association mode: %v", err))
+	    errorResponse(w, fmt.Errorf("Could not save user: %v", err))
 	}
     } 
-    // If we haven't initialized this list, do so now
-    /*
-    userArtistsFollowing, err := app.db.Artists(
-	&prisma.ArtistsParams{
-	    Where: &prisma.UserWhere
-
-	}).Exec( r.Context() )
-    if err != nil {
-	panic(err)
-    }
-    if len(userArtistsFollowing) == 0 {
-	for apiArtist := range(apiFollowedAritsts) {
-	    // Create artist
-	    newArtists, err := app.db.CreateArtist(
-		prisma.ArtistCreateInput{
-		    SpotifyID: apiArtist.ID,
-		    Name: apiArtist.Name,
-		    Uri: apiAritst.URI,
-		    Endpoint: apiArtist.Endpoint,
-		},
-	    ).Exec( r.Context() )
-	    // TODO fix
-	    if err != nil {
-		panic(err)
-	    }
-	    // Add connection to user
-	    _, err := app.db.UpdateUser(
-		prisma.UserUpdateInput{
-		    ArtistsFollowing: prisma.ArtistUpdateManyInput{
-			Connect: newArtist.ID,
-		    },
-		},
-	    ).Exec( r.Context() )
-	    if err != nil {
-		panic(err)
-	    }
-	}
-    }
-    */
+    // Send user the ArtistsListenTo
+    okResponse(w, user.ArtistsListenTo)
 }
 
 // TODO This should return error not bool

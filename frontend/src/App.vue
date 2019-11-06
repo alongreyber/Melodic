@@ -33,14 +33,14 @@
 </template>
 
 <script lang="ts">
-import { store } from "./store";
-import { Component, Vue } from 'vue-property-decorator';
+import { store } from "./utils/store";
+import { Component, Vue } from "vue-property-decorator";
 
 @Component
 export default class App extends Vue {
     // Attach global store so that it becomes reactive
     // This is used to display messages
-    store = store
+    public store = store;
 }
 </script>
 

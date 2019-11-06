@@ -16,3 +16,19 @@ $info: $blue;
 
 // Import only what you need from Bulma
 @import "./bulma-0.7.5/bulma.sass";
+
+// This gives us loading spinner for any element
+.is-loading-el {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.5;
+    &:after {
+	@include loader;
+	position: absolute;
+	top: calc(50% - 2.5em);
+	left: calc(50% - 2.5em);
+	width: 5em;
+	height: 5em;
+	border-width: 0.25em;
+    }
+}

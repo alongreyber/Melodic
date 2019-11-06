@@ -32,8 +32,11 @@ func main() {
     app := App{db: db,
 	       spotifyAuth: &spotifyAuth}
 
+   //db.LogMode(true)
+
     db.AutoMigrate(&User{})
     db.AutoMigrate(&Artist{})
+    db.AutoMigrate(&SpotifyImage{})
 
     r := mux.NewRouter()
     r.Use(app.AddHeaders)

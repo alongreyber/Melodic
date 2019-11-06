@@ -3,18 +3,19 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import { store, Message } from '../store';
+import { Component, Vue } from "vue-property-decorator";
+import { store } from "../utils/store";
+import { Message } from "../utils/message";
 
-const axios = require('axios');
+import axios from "axios";
 
 @Component
 export default class SpotifyCallback extends Vue {
-    store = store
-    mounted() {
+    public store = store;
+    public mounted() {
 	var spotifyParams = this.$route.query;
 	if("error" in spotifyParams) {
-	    if(spotifyParams.error == "access_denied") {
+	    if(spotifyParams.error === "access_denied") {
 		store.addMessage(new Message("Please allow Spotify access to use this app", "is-error"));
 		this.$router.push({name: "home"});
 	    }
@@ -26,20 +27,14 @@ export default class SpotifyCallback extends Vue {
 
 	}
 
-	let component = this;
-	console.log("Making request to login")
-	axios.get('http://localhost:5000/api/login', {
+	const component = this;
+	axios.get("http://localhost:5000/api/login", {
 	    params: spotifyParams,
 	    withCredentials: true,
 	}).then(function(response: any) {
 
-	    console.log("Recieved response:")
-	    console.log(response)
 	    component.$router.push({name: "logged_in"});
 	}).catch(function(error: any) {
-	    console.log("Recieved error:")
-	    console.log(error)
-	    console.log(error.response)
 	});
 
     }
@@ -48,16 +43,15 @@ export default class SpotifyCallback extends Vue {
 function getCookie(cname: string) {
   const name = cname + "=";
   const decodedCookie = decodeURIComponent(document.cookie);
-  const ca = decodedCookie.split(';');
-  for(let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) == ' ') {
+  const ca = decodedCookie.split(";");
+  for(const c of ca) {
+    while (c.charAt(0) === " ") {
       c = c.substring(1);
     }
-    if (c.indexOf(name) == 0) {
+    if (c.indexOf(name) === 0) {
       return c.substring(name.length, c.length);
     }
   }
-  return '';
+  return "";
 }
 </script>
