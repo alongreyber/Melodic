@@ -14,6 +14,7 @@ getClaims	/home/alon/melodic/backend/routes.go	/^func getClaims(ctx context.Cont
 GetListenTo	/home/alon/melodic/backend/routes.go	/^func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 GetThisUserInfo	/home/alon/melodic/backend/routes.go	/^func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 getToken	/home/alon/melodic/backend/routes.go	/^func getToken(user User) (*oauth2.Token, bool) {$/;"	f	language:Go
+GetToReview	/home/alon/melodic/backend/routes.go	/^func (app App) GetToReview(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 getUser	/home/alon/melodic/backend/routes.go	/^func getUser(ctx context.Context) User {$/;"	f	language:Go
 GetUserMiddleware	/home/alon/melodic/backend/routes.go	/^func (app App) GetUserMiddleware(next http.Handler) http.Handler {$/;"	f	language:Go
 HealthCheckHandler	/home/alon/melodic/backend/routes.go	/^func (app App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go

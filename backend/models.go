@@ -25,6 +25,7 @@ type Artist struct {
 
     UsersFollowing []User `gorm:"many2many:user_following_artist"`
     UsersListenTo []User `gorm:"many2many:user_listento_artist"`
+    UsersToReview []Artist `gorm:"many2many:user_toreview_artist"`
 }
 
 type User struct {
@@ -37,5 +38,5 @@ type User struct {
 
     ArtistsFollowing []Artist `gorm:"many2many:user_following_artist"`
     ArtistsListenTo []Artist `gorm:"many2many:user_listento_artist"`
+    ArtistsToReview []Artist `gorm:"many2many:user_toreview_artist"`
 }
-

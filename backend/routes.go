@@ -179,6 +179,37 @@ func MakeArtist(spotifyArtist spotify.FullArtist) Artist {
 
 }
 
+func (app App) GetToReview(w http.ResponseWriter, r *http.Request) {
+    user := getUser(r.Context())
+    // Load all artists to review and preload images
+    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview.Images").First(&user, user.ID).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Couldn't load artists to review from db: %v", err))
+    }
+    okResponse(w, user.ArtistsToReview)
+}
+
+/*
+func (app App) AddToReview(w http.ResponseWriter, r *http.Request) {
+    user := getUser(r.Context())
+    // Load all artists in ToReview and preload images
+    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview.Images").First(&user, user.ID).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Couldn't load artists to review from db: %v", err))
+    }
+
+    // Get all artists in DB
+    var allArtists []Artist
+    err = app.db.Find(&allArtists).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err))
+    }
+
+    // Parse request
+    decoder := json.NewDecoder(r.Body)
+}
+*/
+
 func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     user := getUser(r.Context())
     token, ok := getToken(user)

@@ -14,9 +14,8 @@ services:
     build:
       context: frontend/
       # For development only build up to build-stage
-      target: build-stage
     ports:
-      - '8080:8080'
+      - '8080:5000'
     # Mount to enable hot reload
     volumes:
       - './frontend:/app'
