@@ -45,6 +45,13 @@ services:
       - '25482:25482' # Web socket
     volumes:
       - omnidb:/etc/omnidb
+  sass:
+    image: danmaq/ruby-sass
+    volumes:
+      - .:/code
+    # Watch for changes to the sass folder and recompile sass on any changes
+    command: sass --style compressed --watch /code/frontend/sass/bulma.scss:/code/frontend/public/global.css
+
 volumes:
   postgres:
   omnidb:

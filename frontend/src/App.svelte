@@ -3,18 +3,18 @@
 <nav class="navbar is-primary" role="navigation">
   <div class="navbar-brand">
       <div class="navbar-item">
-	  <img src="logo-white.png" height="40" >
+	  <img src="logo-white.png" alt="Melodic Logo" height="40" >
 	  <span class="logo-text">
 	  Melodic
 	  </span>
       </div>
   </div>
   <div class="navbar-start">
-    <a class="navbar-item" to="/" use:link use:active>Home</a>
-    <a class="navbar-item" to="/about" use:link use:active>About</a>
+    <a class="navbar-item" href="/" use:link use:active>Home</a>
+    <a class="navbar-item" href="/about" use:link use:active>About</a>
   </div>
   <div class="navbar-end">
-      <a class="navbar-item">Our Socials!</a>
+      <a class="navbar-item" href="/" >Our Socials!</a>
   </div>
 </nav>
 <div class="container" id="main-container">
