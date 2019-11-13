@@ -37,3 +37,15 @@ import active from 'svelte-spa-router/active'
 // Import the list of routes
 import routes from './routes'
 </script>
+
+<style>
+#main-container {
+    margin-top: 15px;
+}
+.logo-text {
+    margin-left: 5px;
+    font-family: "Georgia", Serif;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+</style>
