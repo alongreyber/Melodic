@@ -3,7 +3,6 @@
 </button>
 
 <script>
-import {push, pop, replace} from 'svelte-spa-router'
 import { onMount } from 'svelte';
 
 let redirectURI = "";

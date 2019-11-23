@@ -35,7 +35,7 @@ import Router from 'svelte-spa-router'
 import { link, replace } from 'svelte-spa-router'
 import active from 'svelte-spa-router/active'
 // Import the list of routes
-import routes from './routes'
+import routes from './routes.js'
 </script>
 
 <style>

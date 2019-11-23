@@ -19,6 +19,7 @@ services:
     # Mount to enable hot reload
     volumes:
       - './frontend:/app'
+      - /app/node_modules
   backend:
     build:
       context: backend/

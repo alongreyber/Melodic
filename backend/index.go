@@ -27,7 +27,7 @@ func main() {
 	panic(err)
     }
 
-    spotifyAuth := spotify.NewAuthenticator("http://localhost:8080/#/spotify_callback", spotify.ScopeUserReadPrivate, spotify.ScopeUserReadEmail, spotify.ScopeUserLibraryRead, spotify.ScopeUserFollowRead)
+    spotifyAuth := spotify.NewAuthenticator("http://localhost:8080/", spotify.ScopeUserReadPrivate, spotify.ScopeUserReadEmail, spotify.ScopeUserLibraryRead, spotify.ScopeUserFollowRead)
 
     app := App{db: db,
 	       spotifyAuth: &spotifyAuth}
