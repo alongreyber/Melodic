@@ -5,12 +5,13 @@
     <div class="columns">
 	<div class="column">
 	    <h3 class="title is-3">Artists to Listen To</h3>
-	    <!-- Stuff -->
+	    <ArtistList on:sendToReview="{sendToReview}" artists={listenTo} loading={loadingListenTo} ></ArtistList>
 	</div>
 	<div class="column">
 	</div>
 	<div class="column">
 	    <h3 class="title is-3">Artists to Review</h3>
+	    <ArtistList artists={toReview} loading={loadingToReview} ></ArtistList>
 	</div>
     </div>
 </div>
@@ -18,28 +19,53 @@
 <script>
 let username = "";
 let listenTo = [];
+let toReview = [];
 
 let loadingListenTo = true;
+let loadingToReview = true;
 
 import { onMount } from 'svelte';
+import ArtistList from '../components/ArtistList.svelte';
 
-onMount( async () => {
-    const resp = await fetch("http://localhost:5000/api/getUserInfo", 
-	{ credentials: "any" } 
+async function sendToReview( event ) {
+    // Remove from listenTo
+    const artist = event.detail;
+    listenTo = listenTo.filter(obj => obj.ID !== artist.ID)
+    // Add to start of toReview
+    toReview.unshift(artist);
+    toReview = toReview;
+    // Update in DB
+
+    const resp = await fetch("http://localhost:5000/api/moveToReview/" + artist.ID, 
+	{ credentials: "include" } 
     );
     if(!resp.ok) {
 	// Do something
+	console.log("Request failed (badly)");
     }
-    const spotifyResp = await resp.json();
-    username = spotifyResp.display_name;
+}
 
-    // Get artists following
-    resp = await fetch("http://localhost:5000/api/getListenTo", {
-	credentials: "any"
+onMount( async () => {
+    const userResp = await fetch("http://localhost:5000/api/getUserInfo", 
+	{ credentials: "include" } 
+    );
+    if(!userResp.ok) {
+	// Do something
+    }
+    const userData = await userResp.json();
+    username = userData.data.display_name;
+
+    // Get artists on listenTo
+    const listenResp = await fetch("http://localhost:5000/api/listenTo", {
+	credentials: "include"
     });
-    listenTo = await resp.json();
-    console.log("ListenTo:");
-    console.log(listenTo);
+    if(!listenResp.ok) {
+	console.log("Response failed:");
+	console.log(listenResp);
+	// Do something
+    }
+    const listenData = await listenResp.json();
+    listenTo = listenData.data;
     for(const [index, artist] of listenTo.entries()) {
 	for(const image of artist.Images) {
 	    if(image.Width === 160) {
@@ -48,5 +74,27 @@ onMount( async () => {
 	}
     }
     loadingListenTo = false;
+
+    // TODO this should run async with above
+    // Get artists on listenTo
+    const reviewResp = await fetch("http://localhost:5000/api/toReview", {
+	credentials: "include"
+    });
+    if(!reviewResp.ok) {
+	console.log("Response failed:");
+	console.log(listenResp);
+	// Do something
+    }
+    const reviewData = await reviewResp.json();
+    toReview = toReview.data;
+    for(const [index, artist] of toReview.entries()) {
+	for(const image of artist.Images) {
+	    if(image.Width === 160) {
+		toReview[index].image_url = image.URL;
+	    }
+	}
+    }
+    //listenTo = listenTo;
+    loadingToReview = false;
 });
 </script>

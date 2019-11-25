@@ -16,6 +16,7 @@ services:
       # For development only build up to build-stage
     ports:
       - '8080:8080'
+      - '35729:35729' # for hot reload
     # Mount to enable hot reload
     volumes:
       - './frontend:/app'

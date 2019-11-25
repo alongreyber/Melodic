@@ -46,8 +46,13 @@ func main() {
     api.HandleFunc("/login", app.SpotifyLoginHandler)
     api.HandleFunc("/getUserInfo", app.GetThisUserInfo)
     api.HandleFunc("/healthCheck", app.HealthCheckHandler)
-    api.HandleFunc("/getListenTo", app.GetListenTo)
-    api.HandleFunc("/getCallbackURL", app.CallbackURL)
+    api.HandleFunc("/getCallbackURL", app.CallbackURL).Methods("GET")
+
+    api.HandleFunc("/listenTo", app.GetListenTo).Methods("GET")
+    api.HandleFunc("/toReview", app.GetToReview).Methods("GET")
+
+    api.HandleFunc("/moveToReview/{id:[0-9]+}", app.MoveToReview).Methods("GET")
+    api.HandleFunc("/moveToListen/{id:[0-9]+}", app.MoveToListenTo).Methods("GET")
 
     // Log all requests and responses to stdout for debugging
     loggedRouter := handlers.LoggingHandler(os.Stdout, r)

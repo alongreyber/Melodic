@@ -11,6 +11,8 @@ import (
     "github.com/jinzhu/gorm"
     uuid "github.com/google/uuid"
     spotify "github.com/zmb3/spotify"
+    "strconv"
+    mux "github.com/gorilla/mux"
 )
 
 // Contains any claims stored in the JWT
@@ -106,6 +108,7 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
 	err = app.db.Create(&user).Error
 	if err != nil {
 	    errorResponse(w, fmt.Errorf("Could not create new user: %v", err))
+	    return
 	}
     } else if err != nil {
 	errorResponse(w, fmt.Errorf("Error finding user in DB: %v", err) )
@@ -185,30 +188,79 @@ func (app App) GetToReview(w http.ResponseWriter, r *http.Request) {
     err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview.Images").First(&user, user.ID).Error
     if err != nil {
 	errorResponse(w, fmt.Errorf("Couldn't load artists to review from db: %v", err))
+	return
     }
     okResponse(w, user.ArtistsToReview)
 }
 
-/*
-func (app App) AddToReview(w http.ResponseWriter, r *http.Request) {
+// Move to review list from listenTo
+func (app App) MoveToReview(w http.ResponseWriter, r *http.Request) {
     user := getUser(r.Context())
-    // Load all artists in ToReview and preload images
-    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview.Images").First(&user, user.ID).Error
+    // Load ArtistsListenTo
+    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview.Images").Preload("ArtistsListenTo.Images").First(&user, user.ID).Error
     if err != nil {
-	errorResponse(w, fmt.Errorf("Couldn't load artists to review from db: %v", err))
+	errorResponse(w, fmt.Errorf("Failed to load ArtistsListenTo: %v", err))
+	return
     }
 
-    // Get all artists in DB
-    var allArtists []Artist
-    err = app.db.Find(&allArtists).Error
+    vars := mux.Vars(r)
+    idString := vars["id"]
+    id, err := strconv.ParseUint(idString, 10, 64)
     if err != nil {
-	errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err))
+	errorResponse(w, NewHTTPError(err, "Invalid ID", http.StatusBadRequest))
     }
-
-    // Parse request
-    decoder := json.NewDecoder(r.Body)
+    var removedArtist *Artist
+    fmt.Printf("ID: %d\n", id)
+    for index, artist := range user.ArtistsListenTo {
+	fmt.Printf("Artist ID: %d\n", artist.ID)
+	if uint64(artist.ID) == id {
+	    user.ArtistsListenTo = append(user.ArtistsListenTo[:index], user.ArtistsListenTo[index+1:]...)
+	    removedArtist = &artist
+	    break
+	}
+    }
+    if removedArtist == nil {
+	errorResponse(w, NewHTTPError(nil, "Could not find artist with ID", http.StatusBadRequest))
+	return
+    }
+    user.ArtistsToReview = append(user.ArtistsToReview, *removedArtist)
+    err = app.db.Save(&user).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not save user: %v", err))
+	return
+    }
+    okResponse(w, "Done")
 }
-*/
+
+// Move to listenTo list from review
+func (app App) MoveToListenTo(w http.ResponseWriter, r *http.Request) {
+    user := getUser(r.Context())
+    vars := mux.Vars(r)
+    idString := vars["id"]
+    id, err := strconv.ParseUint(idString, 10, 64)
+    if err != nil {
+	errorResponse(w, NewHTTPError(err, "Invalid ID", http.StatusBadRequest))
+    }
+    var removedArtist *Artist
+    for index, artist := range user.ArtistsToReview {
+	if uint64(artist.ID) == id {
+	    user.ArtistsToReview = append(user.ArtistsToReview[:index], user.ArtistsToReview[index+1:]...)
+	    removedArtist = &artist
+	    break
+	}
+    }
+    if removedArtist == nil {
+	errorResponse(w, NewHTTPError(nil, "Could not find artist with ID", http.StatusBadRequest))
+	return
+    }
+    user.ArtistsListenTo = append(user.ArtistsListenTo, *removedArtist)
+    err = app.db.Save(&user).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not save user: %v", err))
+	return
+    }
+    okResponse(w, "Done")
+}
 
 func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     user := getUser(r.Context())
@@ -222,6 +274,7 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsListenTo.Images").First(&user, user.ID).Error
     if err != nil {
 	errorResponse(w, fmt.Errorf("Couldn't load user's artists from db: %v", err))
+	return
     }
 
     // Get all artists in DB
@@ -229,12 +282,14 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     err = app.db.Find(&allArtists).Error
     if err != nil {
 	errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err))
+	return
     }
 
     // Get current artists from spotify
     SpotifyFollowingArtists, err := GetAllFollowingArtists(spotifyClient)
     if err != nil {
 	errorResponse(w, err)
+	return
     }
 
     // If we haven't initialized this list yet. Let's do that now
@@ -261,6 +316,7 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 	err = app.db.Save(&user).Error
 	if err != nil {
 	    errorResponse(w, fmt.Errorf("Could not save user: %v", err))
+	    return
 	}
     } else {
 	// Now what we do is check for any new artists
@@ -271,6 +327,7 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 	err = app.db.Find(&allArtists).Error
 	if err != nil {
 	    errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err))
+	    return
 	}
 
 	// Loop over artists and see if any have been added
@@ -305,6 +362,7 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 	err = app.db.Save(&user).Error
 	if err != nil {
 	    errorResponse(w, fmt.Errorf("Could not save user: %v", err))
+	    return
 	}
     } 
     // Send user the ArtistsListenTo

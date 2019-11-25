@@ -27,6 +27,8 @@ main	/home/alon/melodic/backend/index.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/models.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/routes.go	/^package main$/;"	p	language:Go
 MakeArtist	/home/alon/melodic/backend/routes.go	/^func MakeArtist(spotifyArtist spotify.FullArtist) Artist {$/;"	f	language:Go
+MoveToListenTo	/home/alon/melodic/backend/routes.go	/^func (app App) MoveToListenTo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+MoveToReview	/home/alon/melodic/backend/routes.go	/^func (app App) MoveToReview(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 NewHTTPError	/home/alon/melodic/backend/errorutils.go	/^func NewHTTPError(err error, detail string, status int) error {$/;"	f	language:Go
 okResponse	/home/alon/melodic/backend/routes.go	/^func okResponse(w http.ResponseWriter, data interface{}) {$/;"	f	language:Go
 RefreshHandler	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
