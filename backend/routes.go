@@ -193,11 +193,12 @@ func (app App) GetToReview(w http.ResponseWriter, r *http.Request) {
     okResponse(w, user.ArtistsToReview)
 }
 
+
 // Move to review list from listenTo
 func (app App) MoveToReview(w http.ResponseWriter, r *http.Request) {
     user := getUser(r.Context())
     // Load ArtistsListenTo
-    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview.Images").Preload("ArtistsListenTo.Images").First(&user, user.ID).Error
+    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview").Preload("ArtistsListenTo").First(&user, user.ID).Error
     if err != nil {
 	errorResponse(w, fmt.Errorf("Failed to load ArtistsListenTo: %v", err))
 	return
@@ -214,7 +215,8 @@ func (app App) MoveToReview(w http.ResponseWriter, r *http.Request) {
     for index, artist := range user.ArtistsListenTo {
 	fmt.Printf("Artist ID: %d\n", artist.ID)
 	if uint64(artist.ID) == id {
-	    user.ArtistsListenTo = append(user.ArtistsListenTo[:index], user.ArtistsListenTo[index+1:]...)
+	    user.ArtistsListenTo[index] = user.ArtistsListenTo[len(user.ArtistsListenTo)-1]
+	    user.ArtistsListenTo = user.ArtistsListenTo[:len(user.ArtistsListenTo)-1]
 	    removedArtist = &artist
 	    break
 	}
@@ -224,6 +226,7 @@ func (app App) MoveToReview(w http.ResponseWriter, r *http.Request) {
 	return
     }
     user.ArtistsToReview = append(user.ArtistsToReview, *removedArtist)
+    // Skip auto update so we don't update the images array we didn't load
     err = app.db.Save(&user).Error
     if err != nil {
 	errorResponse(w, fmt.Errorf("Could not save user: %v", err))
@@ -231,6 +234,7 @@ func (app App) MoveToReview(w http.ResponseWriter, r *http.Request) {
     }
     okResponse(w, "Done")
 }
+
 
 // Move to listenTo list from review
 func (app App) MoveToListenTo(w http.ResponseWriter, r *http.Request) {
@@ -244,7 +248,9 @@ func (app App) MoveToListenTo(w http.ResponseWriter, r *http.Request) {
     var removedArtist *Artist
     for index, artist := range user.ArtistsToReview {
 	if uint64(artist.ID) == id {
-	    user.ArtistsToReview = append(user.ArtistsToReview[:index], user.ArtistsToReview[index+1:]...)
+	    // Remove artist
+	    user.ArtistsToReview[index] = user.ArtistsToReview[len(user.ArtistsToReview)-1]
+	    user.ArtistsToReview = user.ArtistsToReview[:len(user.ArtistsToReview)-1]
 	    removedArtist = &artist
 	    break
 	}
@@ -366,6 +372,7 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 	}
     } 
     // Send user the ArtistsListenTo
+    fmt.Printf("Sending Artists: %s", user.ArtistsListenTo)
     okResponse(w, user.ArtistsListenTo)
 }
 
@@ -392,8 +399,6 @@ func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {
 	errorResponse(w, fmt.Errorf("Could not get current user info: %v", err) ) 
 	return
     }
-
-
     okResponse(w, spotifyUser)
     
 }

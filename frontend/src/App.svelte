@@ -18,11 +18,8 @@
   </div>
 </nav>
 <div class="container" id="main-container">
-	<div class="notification">
-	    <button class="delete" >
-	    </button>
-	    This is a notification
-	</div>
+    <!-- Display notifications -->
+    <Notifications></Notifications>
     <!-- Show the router -->
     <Router {routes} />
 </div>
@@ -36,6 +33,7 @@ import { link, replace } from 'svelte-spa-router'
 import active from 'svelte-spa-router/active'
 // Import the list of routes
 import routes from './routes.js'
+import Notifications from './components/Notifications.svelte';
 </script>
 
 <style>

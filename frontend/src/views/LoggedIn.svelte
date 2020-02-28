@@ -26,6 +26,7 @@ let loadingToReview = true;
 
 import { onMount } from 'svelte';
 import ArtistList from '../components/ArtistList.svelte';
+import * as backend from "../utils/backend.js";
 
 async function sendToReview( event ) {
     // Remove from listenTo
@@ -36,36 +37,15 @@ async function sendToReview( event ) {
     toReview = toReview;
     // Update in DB
 
-    const resp = await fetch("http://localhost:5000/api/moveToReview/" + artist.ID, 
-	{ credentials: "include" } 
-    );
-    if(!resp.ok) {
-	// Do something
-	console.log("Request failed (badly)");
-    }
+    const data = backend.request("http://localhost:5000/api/moveToReview/" + artist.ID);
 }
 
 onMount( async () => {
-    const userResp = await fetch("http://localhost:5000/api/getUserInfo", 
-	{ credentials: "include" } 
-    );
-    if(!userResp.ok) {
-	// Do something
-    }
-    const userData = await userResp.json();
-    username = userData.data.display_name;
+    const userData = await backend.request("http://localhost:5000/api/getUserInfo"); 
+    username = userData.display_name;
 
     // Get artists on listenTo
-    const listenResp = await fetch("http://localhost:5000/api/listenTo", {
-	credentials: "include"
-    });
-    if(!listenResp.ok) {
-	console.log("Response failed:");
-	console.log(listenResp);
-	// Do something
-    }
-    const listenData = await listenResp.json();
-    listenTo = listenData.data;
+    listenTo = await backend.request("http://localhost:5000/api/listenTo");
     for(const [index, artist] of listenTo.entries()) {
 	for(const image of artist.Images) {
 	    if(image.Width === 160) {
@@ -77,16 +57,9 @@ onMount( async () => {
 
     // TODO this should run async with above
     // Get artists on listenTo
-    const reviewResp = await fetch("http://localhost:5000/api/toReview", {
-	credentials: "include"
-    });
-    if(!reviewResp.ok) {
-	console.log("Response failed:");
-	console.log(listenResp);
-	// Do something
-    }
-    const reviewData = await reviewResp.json();
-    toReview = toReview.data;
+    toReview = await backend.request("http://localhost:5000/api/toReview");
+    console.log("toReview:");
+    console.log(toReview);
     for(const [index, artist] of toReview.entries()) {
 	for(const image of artist.Images) {
 	    if(image.Width === 160) {

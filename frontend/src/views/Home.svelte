@@ -6,7 +6,6 @@
 <script>
 import LoginWithSpotify from '../components/LoginWithSpotify.svelte';
 
-import queryString from 'query-string';
 import { onMount } from 'svelte';
 import { push, pop, replace } from 'svelte-spa-router';
 
@@ -27,26 +26,26 @@ function getCookie(cname) {
 
 onMount( async () => {
     // Need to handle the spotify callback 
-    const spotifyParams = queryString.parse(location.search);
+    const spotifyParams = (new URL(location.href)).searchParams;
     // If "code" exists in query string assume this was a callback
-    if( "code" in spotifyParams ) {
-	if(!("state" in spotifyParams) ||
-	    spotifyParams.state !== getCookie("spotifyState")) {
+    if( spotifyParams.has("code") ) {
+	if(!( spotifyParams.has("state") ) ||
+	    spotifyParams.get("state") !== getCookie("spotifyState")) {
 		console.log("Invalid State");
 	}
 	// Forward to backend
 	var url = new URL("http://localhost:5000/api/login")
-	Object.keys(spotifyParams).forEach(key => url.searchParams.append(key, spotifyParams[key]));
-	console.log("URL:");
-	console.log(url);
+	for(const [key, value] of spotifyParams) {
+	    url.searchParams.append(key, value);
+	}
 	const resp = await fetch(url, {
 	    credentials: "include"
 	});
 
 	if(resp.ok) {
 	    // Remove the parameters from the URL using the history API
-	    // This is definitely a hack but this is only for one page of the site so I'm not
-	    // too worried about it
+	    // This is definitely a hack but this is only for one page of the site so 
+	    // I'm not too worried about it
 	    history.replaceState && history.replaceState( null, '', location.pathname + location.search.replace(/[\?&]code=[^&]+/, '').replace(/^&/, '?')
 	    );
 	    history.replaceState && history.replaceState( null, '', location.pathname + location.search.replace(/[\?&]state=[^&]+/, '').replace(/^&/, '?')

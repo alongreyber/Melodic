@@ -21,7 +21,7 @@ type Artist struct {
     Name string
     URI string
     Endpoint string
-    Images []SpotifyImage
+    Images []SpotifyImage `gorm:"gorm:association_autoupdate"`
 
     UsersFollowing []User `gorm:"many2many:user_following_artist"`
     UsersListenTo []User `gorm:"many2many:user_listento_artist"`
