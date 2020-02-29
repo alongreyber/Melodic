@@ -1,0 +1,14 @@
+// Custom Variables and Functions
+
+// Brand Colors
+$pink: #D34F73;
+$blue: #4281A4;
+$teal: #48A9A6;
+
+// Update Bulma's global variables
+$primary: $pink;
+$link: $teal;
+$info: $blue;
+
+// Import complete Bulma
+@import '~bulma/bulma.sass';

@@ -57,7 +57,7 @@ func main() {
     // Log all requests and responses to stdout for debugging
     loggedRouter := handlers.LoggingHandler(os.Stdout, r)
     // Run
-    err = http.ListenAndServe(":5000", loggedRouter)
+    err = http.ListenAndServe(":80", loggedRouter)
     if err != nil {
 	panic(err)
     }
