@@ -1,32 +1,82 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view/>
+      <nav v-if="loggedIn" class="navbar is-primary">
+	  <div class="navbar-brand">
+	      <div class="navbar-item">
+		  <img src="./assets/logo-white.png" alt="Melodic Logo" height="40" >
+		  <span class="logo-text">
+		  Melodic
+		  </span>
+	      </div>
+	  </div>
+
+	  <div class="navbar-start">
+	    <a class="navbar-item">Home</a>
+	  </div>
+
+	  <div class="navbar-end">
+	      <div class="navbar-item">
+		  Welcome {{ $store.state.user.display_name }}
+	      </div>
+	      <div class="navbar-item">
+		  <div class="buttons">
+		      <button class="button is-light" v-on:click="logout">
+			  Log Out
+		      </button>
+		  </div>
+	      </div>
+	  </div>
+      </nav>
+      <div class="container" id="main-container">
+	  <div class="modal" :class="{'is-active' : $store.state.modal }">
+	      <div class="modal-background"></div>
+	      <div class="modal-card">
+		  <header class="modal-card-head">
+		      <p class="modal-card-title">{{ $store.state.modal ? $store.state.modal.title : '' }}</p>
+		      <button class="delete" @click="$store.commit('clearModal')"></button>
+		  </header>
+		  <section class="modal-card-body">
+		      {{ $store.state.modal ? $store.state.modal.text : '' }}
+		  </section>
+	      </div>
+	  </div>
+	  <div v-for="n in $store.state.messages" class="notification" :class="n.color">
+	      <button class="delete" @click="$store.commit('clearMessage', n)"></button>
+	      {{ n.text }}
+	  </div>
+	
+	<router-view/>
+      </div>
   </div>
 </template>
 
-<style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+import { getApi } from './api';
 
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
+export default {
+    name: 'App',
+    computed: {
+	loggedIn: function() {
+	    return this.$store.state.loggedIn;
+	}
+    },
+    methods: {
+	logout: async function() {
+	    let result = await getApi('/logout');
+	    if(result) {
+		this.$store.commit('logOut');
+		this.$router.push('/');
+	    }
+	}
     }
-  }
+}
+</script>
+
+<style lang="scss">
+.logo-text {
+    margin-left: 5px;
+    font-family: "Georgia", Serif;
+    font-weight: bold;
+    font-size: 1.5rem;
 }
 </style>

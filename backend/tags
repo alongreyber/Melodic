@@ -21,6 +21,7 @@ HealthCheckHandler	/home/alon/melodic/backend/routes.go	/^func (app App) HealthC
 HTTPError	/home/alon/melodic/backend/errorutils.go	/^type HTTPError struct {$/;"	t	language:Go
 JwtAuthentication	/home/alon/melodic/backend/routes.go	/^func (app App) JwtAuthentication(next http.Handler) http.Handler {$/;"	f	language:Go
 jwtKey	/home/alon/melodic/backend/routes.go	/^var jwtKey = []byte("my_secret_key")$/;"	v	language:Go
+LogoutHandler	/home/alon/melodic/backend/routes.go	/^func (app App) LogoutHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 main	/home/alon/melodic/backend/errorutils.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/index.go	/^func main() {$/;"	f	language:Go
 main	/home/alon/melodic/backend/index.go	/^package main$/;"	p	language:Go

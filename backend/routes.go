@@ -72,6 +72,15 @@ func (app App) CallbackURL(w http.ResponseWriter, r *http.Request) {
     okResponse(w, response)
 }
 
+func (app App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    http.SetCookie(w, &http.Cookie{
+	Name: "token",
+	Value: "",
+	MaxAge: -1,
+    })
+    okResponse(w, "Logged Out")
+}
+
 func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
     // For spotify login we are given a code and need to exchange it for a token
     state, ok := r.URL.Query()["state"]
@@ -439,9 +448,7 @@ func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app App) AddHeaders(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Header().Set("Access-Control-Allow-Headers", "origin, content-type, accept")
 	next.ServeHTTP(w, r)
     })
 }
@@ -472,7 +479,7 @@ func (app App) GetUserMiddleware(next http.Handler) http.Handler {
 func (app App) JwtAuthentication(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// Check if this route needs auth
-	notAuth := []string{"/api/login", "/api/healthCheck", "/api/getCallbackURL"}
+	notAuth := []string{"/api/login", "/api/logout", "/api/healthCheck", "/api/getCallbackURL"}
 	requestPath := r.URL.Path
 	for _, value := range notAuth {
 	    if value == requestPath {

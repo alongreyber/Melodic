@@ -27,7 +27,7 @@ func main() {
 	panic(err)
     }
 
-    spotifyAuth := spotify.NewAuthenticator("http://localhost:8080/", spotify.ScopeUserReadPrivate, spotify.ScopeUserReadEmail, spotify.ScopeUserLibraryRead, spotify.ScopeUserFollowRead)
+    spotifyAuth := spotify.NewAuthenticator("http://localhost/", spotify.ScopeUserReadPrivate, spotify.ScopeUserReadEmail, spotify.ScopeUserLibraryRead, spotify.ScopeUserFollowRead)
 
     app := App{db: db,
 	       spotifyAuth: &spotifyAuth}
@@ -44,6 +44,7 @@ func main() {
     r.Use(app.GetUserMiddleware)
     api := r.PathPrefix("/api").Subrouter()
     api.HandleFunc("/login", app.SpotifyLoginHandler)
+    api.HandleFunc("/logout", app.LogoutHandler)
     api.HandleFunc("/getUserInfo", app.GetThisUserInfo)
     api.HandleFunc("/healthCheck", app.HealthCheckHandler)
     api.HandleFunc("/getCallbackURL", app.CallbackURL).Methods("GET")
