@@ -24,8 +24,8 @@ type Artist struct {
     Images []SpotifyImage `gorm:"gorm:association_autoupdate"`
 
     UsersFollowing []User `gorm:"many2many:user_following_artist"`
-    UsersListenTo []User `gorm:"many2many:user_listento_artist"`
-    UsersToReview []Artist `gorm:"many2many:user_toreview_artist"`
+    UsersRecentlyFollowed []User `gorm:"many2many:user_recentlyfollowed_artist"`
+    UsersRecentlyListened []User `gorm:"many2many:user_recentlylistened_artist"`
 }
 
 type User struct {
@@ -37,6 +37,6 @@ type User struct {
     SpotifyTokenType string
 
     ArtistsFollowing []Artist `gorm:"many2many:user_following_artist"`
-    ArtistsListenTo []Artist `gorm:"many2many:user_listento_artist"`
-    ArtistsToReview []Artist `gorm:"many2many:user_toreview_artist"`
+    ArtistsRecentlyFollowed []Artist `gorm:"many2many:user_recentlyfollowed_artist"`
+    ArtistsRecentlyListened []Artist `gorm:"many2many:user_recentlylistened_artist"`
 }

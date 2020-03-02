@@ -37,8 +37,6 @@ export default {
 	    history.replaceState && history.replaceState( null, '', location.pathname + location.search.replace(/[\?&]state=[^&]+/, '').replace(/^&/, '?')
 	    );
 	    let user = await getApi('/getUserInfo');
-	    console.log("User")
-	    console.log(user)
 	    this.$store.commit('logIn', user);
 	    this.$router.push('/dashboard');
 	}

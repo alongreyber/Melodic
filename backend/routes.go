@@ -11,8 +11,6 @@ import (
     "github.com/jinzhu/gorm"
     uuid "github.com/google/uuid"
     spotify "github.com/zmb3/spotify"
-    "strconv"
-    mux "github.com/gorilla/mux"
 )
 
 // Contains any claims stored in the JWT
@@ -85,13 +83,13 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
     // For spotify login we are given a code and need to exchange it for a token
     state, ok := r.URL.Query()["state"]
     if !ok || len(state) != 1 {
-	errorResponse(w, NewHTTPError(nil, "No state given", http.StatusUnauthorized))
+	errorResponse(w, fmt.Errorf("No state given"), http.StatusUnauthorized)
 	return
     }
     // We're not validating state here because it has been verified on the frontend
     spotify_token, err := app.spotifyAuth.Token(state[0], r)
     if err != nil {
-	errorResponse(w, fmt.Errorf("Could not get token: %v", err) )
+	errorResponse(w, fmt.Errorf("Could not get token: %v", err), http.StatusInternalServerError)
 	return
     }
     // create a client using the specified token
@@ -101,28 +99,32 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
     // If not, create one
     spotify_user, err := client.CurrentUser()
     if err != nil {
-	errorResponse(w, fmt.Errorf("Could not get spotify user info: %v", err) )
+	errorResponse(w, fmt.Errorf("Could not get spotify user info: %v", err), http.StatusInternalServerError )
 	return
     }
     var user User
     err = app.db.Where(&User{SpotifyID: spotify_user.ID}).First(&user).Error
     if gorm.IsRecordNotFoundError(err) {
-	user = User{
-	    SpotifyID: spotify_user.ID,
-	    SpotifyTokenAccess: spotify_token.AccessToken,
-	    SpotifyTokenRefresh: spotify_token.RefreshToken,
-	    SpotifyTokenExpiry: spotify_token.Expiry,
-	    SpotifyTokenType: spotify_token.TokenType,
-	}
+	user = User{}
 	err = app.db.Create(&user).Error
 	if err != nil {
-	    errorResponse(w, fmt.Errorf("Could not create new user: %v", err))
+	    errorResponse(w, fmt.Errorf("Could not create new user: %v", err), http.StatusInternalServerError )
 	    return
 	}
-    } else if err != nil {
-	errorResponse(w, fmt.Errorf("Error finding user in DB: %v", err) )
+
+    }
+    user.SpotifyID           = spotify_user.ID
+    user.SpotifyTokenAccess  = spotify_token.AccessToken
+    user.SpotifyTokenRefresh = spotify_token.RefreshToken
+    user.SpotifyTokenExpiry  = spotify_token.Expiry
+    user.SpotifyTokenType    = spotify_token.TokenType
+
+    err = app.db.Save(&user).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not save user: %v", err), http.StatusInternalServerError)
 	return
     }
+
     // Create JWT for app login
     expirationTime := time.Now().Add(1 * time.Hour)
     claims := &Claims{
@@ -138,7 +140,7 @@ func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {
     tokenString, err := token.SignedString(jwtKey)
 
     if err != nil {
-	errorResponse(w, fmt.Errorf("Error creating JWT: %v", err) )
+	errorResponse(w, fmt.Errorf("Error creating JWT: %v", err) , http.StatusInternalServerError)
 	return
     }
     // Return the token to the user
@@ -191,93 +193,8 @@ func MakeArtist(spotifyArtist spotify.FullArtist) Artist {
 
 }
 
-func (app App) GetToReview(w http.ResponseWriter, r *http.Request) {
-    user := getUser(r.Context())
-    // Load all artists to review and preload images
-    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview.Images").First(&user, user.ID).Error
-    if err != nil {
-	errorResponse(w, fmt.Errorf("Couldn't load artists to review from db: %v", err))
-	return
-    }
-    okResponse(w, user.ArtistsToReview)
-}
+func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {
 
-
-// Move to review list from listenTo
-func (app App) MoveToReview(w http.ResponseWriter, r *http.Request) {
-    user := getUser(r.Context())
-    // Load ArtistsListenTo
-    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsToReview").Preload("ArtistsListenTo").First(&user, user.ID).Error
-    if err != nil {
-	errorResponse(w, fmt.Errorf("Failed to load ArtistsListenTo: %v", err))
-	return
-    }
-
-    vars := mux.Vars(r)
-    idString := vars["id"]
-    id, err := strconv.ParseUint(idString, 10, 64)
-    if err != nil {
-	errorResponse(w, NewHTTPError(err, "Invalid ID", http.StatusBadRequest))
-    }
-    var removedArtist *Artist
-    fmt.Printf("ID: %d\n", id)
-    for index, artist := range user.ArtistsListenTo {
-	fmt.Printf("Artist ID: %d\n", artist.ID)
-	if uint64(artist.ID) == id {
-	    user.ArtistsListenTo[index] = user.ArtistsListenTo[len(user.ArtistsListenTo)-1]
-	    user.ArtistsListenTo = user.ArtistsListenTo[:len(user.ArtistsListenTo)-1]
-	    removedArtist = &artist
-	    break
-	}
-    }
-    if removedArtist == nil {
-	errorResponse(w, NewHTTPError(nil, "Could not find artist with ID", http.StatusBadRequest))
-	return
-    }
-    user.ArtistsToReview = append(user.ArtistsToReview, *removedArtist)
-    // Skip auto update so we don't update the images array we didn't load
-    err = app.db.Save(&user).Error
-    if err != nil {
-	errorResponse(w, fmt.Errorf("Could not save user: %v", err))
-	return
-    }
-    okResponse(w, "Done")
-}
-
-
-// Move to listenTo list from review
-func (app App) MoveToListenTo(w http.ResponseWriter, r *http.Request) {
-    user := getUser(r.Context())
-    vars := mux.Vars(r)
-    idString := vars["id"]
-    id, err := strconv.ParseUint(idString, 10, 64)
-    if err != nil {
-	errorResponse(w, NewHTTPError(err, "Invalid ID", http.StatusBadRequest))
-    }
-    var removedArtist *Artist
-    for index, artist := range user.ArtistsToReview {
-	if uint64(artist.ID) == id {
-	    // Remove artist
-	    user.ArtistsToReview[index] = user.ArtistsToReview[len(user.ArtistsToReview)-1]
-	    user.ArtistsToReview = user.ArtistsToReview[:len(user.ArtistsToReview)-1]
-	    removedArtist = &artist
-	    break
-	}
-    }
-    if removedArtist == nil {
-	errorResponse(w, NewHTTPError(nil, "Could not find artist with ID", http.StatusBadRequest))
-	return
-    }
-    user.ArtistsListenTo = append(user.ArtistsListenTo, *removedArtist)
-    err = app.db.Save(&user).Error
-    if err != nil {
-	errorResponse(w, fmt.Errorf("Could not save user: %v", err))
-	return
-    }
-    okResponse(w, "Done")
-}
-
-func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     user := getUser(r.Context())
     token, ok := getToken(user)
     if !ok {
@@ -286,9 +203,9 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     spotifyClient := app.spotifyAuth.NewClient(token)
 
     // Load following and listento artists
-    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsListenTo.Images").First(&user, user.ID).Error
+    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsRecentlyFollowed.Images").First(&user, user.ID).Error
     if err != nil {
-	errorResponse(w, fmt.Errorf("Couldn't load user's artists from db: %v", err))
+	errorResponse(w, fmt.Errorf("Couldn't load user's artists from db: %v", err), http.StatusInternalServerError)
 	return
     }
 
@@ -296,14 +213,14 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
     var allArtists []Artist
     err = app.db.Find(&allArtists).Error
     if err != nil {
-	errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err))
+	errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err), http.StatusInternalServerError)
 	return
     }
 
     // Get current artists from spotify
     SpotifyFollowingArtists, err := GetAllFollowingArtists(spotifyClient)
     if err != nil {
-	errorResponse(w, err)
+	errorResponse(w, err, http.StatusInternalServerError)
 	return
     }
 
@@ -324,13 +241,14 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 		artistVal := MakeArtist(spotifyArtist)
 		artist = &artistVal
 	    }
+	    // Make sure artist is not already in list
 	    // Add artist to user follows list
 	    user.ArtistsFollowing = append(user.ArtistsFollowing, *artist)
 	}
 	// Save associations
 	err = app.db.Save(&user).Error
 	if err != nil {
-	    errorResponse(w, fmt.Errorf("Could not save user: %v", err))
+	    errorResponse(w, fmt.Errorf("Could not save user: %v", err), http.StatusInternalServerError)
 	    return
 	}
     } else {
@@ -341,7 +259,7 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 	var allArtists []Artist
 	err = app.db.Find(&allArtists).Error
 	if err != nil {
-	    errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err))
+	    errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err), http.StatusInternalServerError)
 	    return
 	}
 
@@ -354,7 +272,7 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 		    break
 		}
 	    }
-	    // If an artist has been added, put it on the ArtistsListenTo
+	    // If an artist has been added, put it on the ArtistsRecentlyFollowed
 	    if !inList {
 		// Add the artist to the DB if it doesn't exist
 		var artist *Artist
@@ -371,18 +289,112 @@ func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {
 		}
 		// Add also to user
 		user.ArtistsFollowing = append(user.ArtistsFollowing, *artist)
-		user.ArtistsListenTo = append(user.ArtistsListenTo, *artist)
+		user.ArtistsRecentlyFollowed = append(user.ArtistsRecentlyFollowed, *artist)
 	    }
 	}
 	err = app.db.Save(&user).Error
 	if err != nil {
-	    errorResponse(w, fmt.Errorf("Could not save user: %v", err))
+	    errorResponse(w, fmt.Errorf("Could not save user: %v", err), http.StatusInternalServerError)
 	    return
 	}
     } 
-    // Send user the ArtistsListenTo
-    fmt.Printf("Sending Artists: %s", user.ArtistsListenTo)
-    okResponse(w, user.ArtistsListenTo)
+    okResponse(w, "Done")
+}
+
+func (app App) GetRecentlyFollowed(w http.ResponseWriter, r *http.Request) {
+    user := getUser(r.Context())
+    // Load following and listento artists
+    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsRecentlyFollowed.Images").First(&user, user.ID).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Couldn't load user's artists from db: %v", err), http.StatusInternalServerError)
+	return
+    }
+    // Send user the ArtistsRecentlyFollowed
+    okResponse(w, user.ArtistsRecentlyFollowed)
+}
+
+func (app App) RefreshRecentlyListened(w http.ResponseWriter, r *http.Request) {
+    user := getUser(r.Context())
+    token, ok := getToken(user)
+    if !ok {
+	panic("Couldn't make token")
+    }
+
+    spotifyClient := app.spotifyAuth.NewClient(token)
+
+    // Get all artists in DB
+    var allArtists []Artist
+    err := app.db.Find(&allArtists).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err), http.StatusInternalServerError)
+	return
+    }
+
+    recentlyPlayedSpotifyList, err := spotifyClient.PlayerRecentlyPlayed()
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Failed to load recently played: %v", err), http.StatusInternalServerError)
+	return
+    }
+
+    var newRecentlyListened []Artist
+
+    for _, recentlyPlayedSpotify := range(recentlyPlayedSpotifyList) {
+	// Get the first artist associated with this track
+	spotifyArtist := recentlyPlayedSpotify.Track.Artists[0]
+	var dbArtist *Artist
+	for _, a := range(allArtists) {
+	    if(spotifyArtist.ID.String() == a.SpotifyID) {
+		dbArtist = &a
+	    }
+	}
+	if dbArtist == nil {
+	    // Look up the full artist
+	    fullArtist, err := spotifyClient.GetArtist(spotifyArtist.ID)
+	    if err != nil {
+		errorResponse(w, fmt.Errorf("Failed to get artist: %v", err), http.StatusInternalServerError)
+		return
+	    }
+
+	    // Need to allocate a new variable for this
+	    artistVal := MakeArtist(*fullArtist)
+	    dbArtist = &artistVal
+	}
+
+	// Check if this is already in list
+	exists := false
+	for _, a := range(newRecentlyListened) {
+	    if a.SpotifyID == dbArtist.SpotifyID {
+		fmt.Printf( "Not Adding: %s", dbArtist.Name )
+		exists = true
+	    }
+	}
+	if !exists {
+	    newRecentlyListened = append(newRecentlyListened, *dbArtist)
+	}
+    }
+
+
+    // Replace the old list with a new one
+    app.db.Model(&user).Association("ArtistsRecentlyListened").Replace(newRecentlyListened) 
+    err = app.db.Save(&user).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not save user: %v", err), http.StatusInternalServerError)
+	return
+    }
+    okResponse(w, "Done")
+}
+
+func (app App) GetRecentlyListened(w http.ResponseWriter, r *http.Request) {
+    user := getUser(r.Context())
+
+    // Load following and listento artists
+    err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsRecentlyListened.Images").First(&user, user.ID).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Couldn't load user's artists from db: %v", err), http.StatusInternalServerError)
+	return
+    }
+    // Send user the ArtistsRecentlyFollowed
+    okResponse(w, user.ArtistsRecentlyListened)
 }
 
 // TODO This should return error not bool
@@ -405,7 +417,7 @@ func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {
     client := app.spotifyAuth.NewClient(token)
     spotifyUser, err := client.CurrentUser()
     if err != nil {
-	errorResponse(w, fmt.Errorf("Could not get current user info: %v", err) ) 
+	errorResponse(w, fmt.Errorf("Could not get current user info: %v", err), http.StatusInternalServerError) 
 	return
     }
     okResponse(w, spotifyUser)
@@ -417,7 +429,14 @@ func okResponse(w http.ResponseWriter, data interface{}) {
     response["ok"] = true
     response["data"] = data
     w.WriteHeader(http.StatusOK)
-    w.Header().Add("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response)
+}
+
+func errorResponse(w http.ResponseWriter, err error, status int) {
+    response := make(map[string]interface{})
+    response["ok"] = false
+    response["error"] = err.Error()
+    w.WriteHeader(status)
     json.NewEncoder(w).Encode(response)
 }
 
@@ -427,7 +446,7 @@ func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {
     claimsContext := r.Context().Value("claims")
     claims := claimsContext.(*Claims)
     if time.Unix(claims.ExpiresAt, 0).Sub(time.Now())  > 30*time.Second {
-	errorResponse(w, NewHTTPError(nil, "Token not expired", http.StatusBadRequest))
+	errorResponse(w, fmt.Errorf("Token not expired"), http.StatusBadRequest)
 	return
     } 
 
@@ -436,7 +455,7 @@ func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
     tokenString, err := token.SignedString(jwtKey)
     if err != nil {
-	errorResponse(w, fmt.Errorf("Error creating new token: %v", err))
+	errorResponse(w, fmt.Errorf("Error creating new token: %v", err), http.StatusInternalServerError)
 	return
     }
     http.SetCookie(w, &http.Cookie{
@@ -449,6 +468,7 @@ func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {
 func (app App) AddHeaders(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Content-Type", "application/json")
 	next.ServeHTTP(w, r)
     })
 }
@@ -467,7 +487,7 @@ func (app App) GetUserMiddleware(next http.Handler) http.Handler {
 	userQuery.ID = claims.ID
 	app.db.Where(userQuery).First(&user)
 	if app.db.Error != nil {
-	    errorResponse(w, fmt.Errorf("Couldn't get user: %v", app.db.Error))
+	    errorResponse(w, fmt.Errorf("Couldn't get user: %v", app.db.Error), http.StatusInternalServerError)
 	    return
 	}
 	// Add user to context
@@ -492,10 +512,10 @@ func (app App) JwtAuthentication(next http.Handler) http.Handler {
 	c, err := r.Cookie("token")
 	if err != nil {
 	    if err == http.ErrNoCookie {
-		errorResponse(w, NewHTTPError(err, "No token found", http.StatusUnauthorized))
+		errorResponse(w, fmt.Errorf("No token found"), http.StatusUnauthorized)
 		return
 	    } else {
-		errorResponse(w, fmt.Errorf("Bad request: %v", err) )
+		errorResponse(w, fmt.Errorf("Bad request: %v", err), http.StatusInternalServerError )
 		return
 	    }
 	}
@@ -509,15 +529,15 @@ func (app App) JwtAuthentication(next http.Handler) http.Handler {
 
 	if err != nil {
 	    if err == jwt.ErrSignatureInvalid {
-		errorResponse(w, NewHTTPError(err, "Invalid JWT Signature", http.StatusUnauthorized))
+		errorResponse(w, fmt.Errorf("Invalid JWT Signature"), http.StatusUnauthorized)
 		return
 	    } else {
-		errorResponse(w, fmt.Errorf("Bad request: %v", err))
+		errorResponse(w, fmt.Errorf("Bad request: %v", err), http.StatusInternalServerError )
 		return
 	    }
 	}
 	if !token.Valid {
-	    errorResponse(w, NewHTTPError(err, "Invalid Token", http.StatusUnauthorized))
+	    errorResponse(w, fmt.Errorf("Invalid Token"), http.StatusUnauthorized)
 	    return
 	}
 

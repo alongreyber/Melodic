@@ -27,7 +27,7 @@ func main() {
 	panic(err)
     }
 
-    spotifyAuth := spotify.NewAuthenticator("http://localhost/", spotify.ScopeUserReadPrivate, spotify.ScopeUserReadEmail, spotify.ScopeUserLibraryRead, spotify.ScopeUserFollowRead)
+    spotifyAuth := spotify.NewAuthenticator("http://localhost/", spotify.ScopeUserReadPrivate, spotify.ScopeUserReadEmail, spotify.ScopeUserLibraryRead, spotify.ScopeUserFollowRead, spotify.ScopeUserReadRecentlyPlayed)
 
     app := App{db: db,
 	       spotifyAuth: &spotifyAuth}
@@ -49,11 +49,10 @@ func main() {
     api.HandleFunc("/healthCheck", app.HealthCheckHandler)
     api.HandleFunc("/getCallbackURL", app.CallbackURL).Methods("GET")
 
-    api.HandleFunc("/listenTo", app.GetListenTo).Methods("GET")
-    api.HandleFunc("/toReview", app.GetToReview).Methods("GET")
-
-    api.HandleFunc("/moveToReview/{id:[0-9]+}", app.MoveToReview).Methods("GET")
-    api.HandleFunc("/moveToListen/{id:[0-9]+}", app.MoveToListenTo).Methods("GET")
+    api.HandleFunc("/recentlyFollowed", app.GetRecentlyFollowed).Methods("GET")
+    api.HandleFunc("/recentlyListened", app.GetRecentlyListened).Methods("GET")
+    api.HandleFunc("/recentlyFollowed/refresh", app.RefreshRecentlyFollowed).Methods("GET")
+    api.HandleFunc("/recentlyListened/refresh", app.RefreshRecentlyListened).Methods("GET")
 
     // Log all requests and responses to stdout for debugging
     loggedRouter := handlers.LoggingHandler(os.Stdout, r)

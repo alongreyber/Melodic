@@ -6,35 +6,28 @@ App	/home/alon/melodic/backend/index.go	/^type App struct {$/;"	t	language:Go
 Artist	/home/alon/melodic/backend/models.go	/^type Artist struct {$/;"	t	language:Go
 CallbackURL	/home/alon/melodic/backend/routes.go	/^func (app App) CallbackURL(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 Claims	/home/alon/melodic/backend/routes.go	/^type Claims struct {$/;"	t	language:Go
-ClientError	/home/alon/melodic/backend/errorutils.go	/^type ClientError interface {$/;"	t	language:Go
-Error	/home/alon/melodic/backend/errorutils.go	/^func (e *HTTPError) Error() string {$/;"	f	language:Go
-errorResponse	/home/alon/melodic/backend/errorutils.go	/^func errorResponse(w http.ResponseWriter, err error) {$/;"	f	language:Go
+errorResponse	/home/alon/melodic/backend/routes.go	/^func errorResponse(w http.ResponseWriter, err error, status int) {$/;"	f	language:Go
 GetAllFollowingArtists	/home/alon/melodic/backend/routes.go	/^func GetAllFollowingArtists(spotifyClient spotify.Client) (*[]spotify.FullArtist, error) {$/;"	f	language:Go
 getClaims	/home/alon/melodic/backend/routes.go	/^func getClaims(ctx context.Context) (*Claims, bool) {$/;"	f	language:Go
-GetListenTo	/home/alon/melodic/backend/routes.go	/^func (app App) GetListenTo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+GetRecentlyFollowed	/home/alon/melodic/backend/routes.go	/^func (app App) GetRecentlyFollowed(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+GetRecentlyListened	/home/alon/melodic/backend/routes.go	/^func (app App) GetRecentlyListened(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 GetThisUserInfo	/home/alon/melodic/backend/routes.go	/^func (app App) GetThisUserInfo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 getToken	/home/alon/melodic/backend/routes.go	/^func getToken(user User) (*oauth2.Token, bool) {$/;"	f	language:Go
-GetToReview	/home/alon/melodic/backend/routes.go	/^func (app App) GetToReview(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 getUser	/home/alon/melodic/backend/routes.go	/^func getUser(ctx context.Context) User {$/;"	f	language:Go
 GetUserMiddleware	/home/alon/melodic/backend/routes.go	/^func (app App) GetUserMiddleware(next http.Handler) http.Handler {$/;"	f	language:Go
 HealthCheckHandler	/home/alon/melodic/backend/routes.go	/^func (app App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
-HTTPError	/home/alon/melodic/backend/errorutils.go	/^type HTTPError struct {$/;"	t	language:Go
 JwtAuthentication	/home/alon/melodic/backend/routes.go	/^func (app App) JwtAuthentication(next http.Handler) http.Handler {$/;"	f	language:Go
 jwtKey	/home/alon/melodic/backend/routes.go	/^var jwtKey = []byte("my_secret_key")$/;"	v	language:Go
 LogoutHandler	/home/alon/melodic/backend/routes.go	/^func (app App) LogoutHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
-main	/home/alon/melodic/backend/errorutils.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/index.go	/^func main() {$/;"	f	language:Go
 main	/home/alon/melodic/backend/index.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/models.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/routes.go	/^package main$/;"	p	language:Go
 MakeArtist	/home/alon/melodic/backend/routes.go	/^func MakeArtist(spotifyArtist spotify.FullArtist) Artist {$/;"	f	language:Go
-MoveToListenTo	/home/alon/melodic/backend/routes.go	/^func (app App) MoveToListenTo(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
-MoveToReview	/home/alon/melodic/backend/routes.go	/^func (app App) MoveToReview(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
-NewHTTPError	/home/alon/melodic/backend/errorutils.go	/^func NewHTTPError(err error, detail string, status int) error {$/;"	f	language:Go
 okResponse	/home/alon/melodic/backend/routes.go	/^func okResponse(w http.ResponseWriter, data interface{}) {$/;"	f	language:Go
 RefreshHandler	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
-ResponseBody	/home/alon/melodic/backend/errorutils.go	/^func (e *HTTPError) ResponseBody() ([]byte, error) {$/;"	f	language:Go
-ResponseHeaders	/home/alon/melodic/backend/errorutils.go	/^func (e *HTTPError) ResponseHeaders() (int, map[string]string) {$/;"	f	language:Go
+RefreshRecentlyFollowed	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+RefreshRecentlyListened	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshRecentlyListened(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 SpotifyImage	/home/alon/melodic/backend/models.go	/^type SpotifyImage struct {$/;"	t	language:Go
 SpotifyLoginHandler	/home/alon/melodic/backend/routes.go	/^func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 User	/home/alon/melodic/backend/models.go	/^type User struct {$/;"	t	language:Go

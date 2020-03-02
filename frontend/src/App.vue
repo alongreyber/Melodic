@@ -40,7 +40,7 @@
 		  </section>
 	      </div>
 	  </div>
-	  <div v-for="n in $store.state.messages" class="notification" :class="n.color">
+	  <div v-for="n in $store.state.messages" class="notification space-above" :class="n.color">
 	      <button class="delete" @click="$store.commit('clearMessage', n)"></button>
 	      {{ n.text }}
 	  </div>
@@ -73,6 +73,9 @@ export default {
 </script>
 
 <style lang="scss">
+.space-above {
+    margin-top: 10px;
+}
 .logo-text {
     margin-left: 5px;
     font-family: "Georgia", Serif;
