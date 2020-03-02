@@ -27,7 +27,7 @@
 	      </div>
 	  </div>
       </nav>
-      <div class="container" id="main-container">
+      <div class="container space-above" id="main-container">
 	  <div class="modal" :class="{'is-active' : $store.state.modal }">
 	      <div class="modal-background"></div>
 	      <div class="modal-card">

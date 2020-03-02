@@ -1,5 +1,5 @@
 dev-start:
-	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build --abort-on-container-exit
 dev-stop:
 	docker-compose down
 

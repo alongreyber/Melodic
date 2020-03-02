@@ -193,8 +193,7 @@ func MakeArtist(spotifyArtist spotify.FullArtist) Artist {
 
 }
 
-func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {
-
+func (app App) InitializeFollowing(w http.ResponseWriter, r *http.Request) {
     user := getUser(r.Context())
     token, ok := getToken(user)
     if !ok {
@@ -206,6 +205,11 @@ func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {
     err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsRecentlyFollowed.Images").First(&user, user.ID).Error
     if err != nil {
 	errorResponse(w, fmt.Errorf("Couldn't load user's artists from db: %v", err), http.StatusInternalServerError)
+	return
+    }
+
+    if len(user.ArtistsFollowing) != 0 {
+	errorResponse(w, fmt.Errorf("User already initialized"), http.StatusBadRequest)
 	return
     }
 
@@ -224,80 +228,116 @@ func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {
 	return
     }
 
-    // If we haven't initialized this list yet. Let's do that now
-    if len(user.ArtistsFollowing) == 0 {
-	// spotifyFollowedArtistsData is a paged data structure
-	for _, spotifyArtist := range(*SpotifyFollowingArtists) {
-	    // Get artist from DB. If it doesn't exist, create it
-	    var artist *Artist
-	    for _, a := range(allArtists) {
-		if(spotifyArtist.ID.String() == a.SpotifyID) {
-		    artist = &a
-		    break
-		}
+    // spotifyFollowedArtistsData is a paged data structure
+    for _, spotifyArtist := range(*SpotifyFollowingArtists) {
+	// Get artist from DB. If it doesn't exist, create it
+	var artist *Artist
+	for _, a := range(allArtists) {
+	    if(spotifyArtist.ID.String() == a.SpotifyID) {
+		artist = &a
+		break
 	    }
-	    if artist == nil {
-		// Going to need to create it
-		artistVal := MakeArtist(spotifyArtist)
-		artist = &artistVal
-	    }
-	    // Make sure artist is not already in list
-	    // Add artist to user follows list
-	    user.ArtistsFollowing = append(user.ArtistsFollowing, *artist)
 	}
-	// Save associations
-	err = app.db.Save(&user).Error
+	if artist == nil {
+	    // Going to need to create it
+	    artistVal := MakeArtist(spotifyArtist)
+	    artist = &artistVal
+	}
+	// Make sure artist is not already in list
+	// Add artist to user follows list
+	user.ArtistsFollowing = append(user.ArtistsFollowing, *artist)
+    }
+    // Save associations
+    err = app.db.Save(&user).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not save user: %v", err), http.StatusInternalServerError)
+	return
+    }
+
+    okResponse(w, "Done")
+
+}
+
+func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {
+
+    user := getUser(r.Context())
+    token, ok := getToken(user)
+    if !ok {
+	panic("Couldn't make token")
+    }
+    spotifyClient := app.spotifyAuth.NewClient(token)
+
+    // Get all artists in DB
+    var allArtists []Artist
+    err := app.db.Find(&allArtists).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err), http.StatusInternalServerError)
+	return
+    }
+
+    // Get current artists from spotify
+    SpotifyFollowingArtists, err := GetAllFollowingArtists(spotifyClient)
+    if err != nil {
+	errorResponse(w, err, http.StatusInternalServerError)
+	return
+    }
+
+    // Load list of currently followed artists
+    err = app.db.Model(&user).Association("ArtistsFollowing").Find(&user.ArtistsFollowing).Error
+    if err != nil {
+	errorResponse(w, err, http.StatusInternalServerError)
+	return
+    }
+
+    // Now what we do is check for any new artists
+    // If we've followed new artists add them to the "listen to" list
+
+    // Loop over artists and see if any have been added
+    for _, spotifyArtist := range(*SpotifyFollowingArtists) {
+	alreadyFollowing := false
+	for _, a := range(user.ArtistsFollowing) {
+	    if a.SpotifyID == spotifyArtist.ID.String() {
+		alreadyFollowing = true
+		break
+	    }
+	}
+	if alreadyFollowing {
+	    continue
+	}
+
+	// Add the artist to the DB if it doesn't exist
+	var artist *Artist
+	for _, a := range(allArtists) {
+	    if spotifyArtist.ID.String() == "" {
+		fmt.Printf("Blank Artist: %s\n", spotifyArtist.Name)
+	    }
+	    if spotifyArtist.ID.String() == a.SpotifyID  {
+		artist = &a
+		break
+	    }
+	}
+	if artist == nil {
+	    // Going to need to create it
+	    artistVal := MakeArtist(spotifyArtist)
+	    artist = &artistVal
+	    err = app.db.Create(artist).Error
+	    if err != nil {
+		errorResponse(w, fmt.Errorf("Could not create artist: %v", err), http.StatusInternalServerError)
+		return
+	    }
+	}
+	// Add to 
+	err = app.db.Model(&user).Association("ArtistsFollowing").Append(*artist).Error
 	if err != nil {
 	    errorResponse(w, fmt.Errorf("Could not save user: %v", err), http.StatusInternalServerError)
 	    return
 	}
-    } else {
-	// Now what we do is check for any new artists
-	// If we've followed new artists add them to the "listen to" list
-
-	// Get all artists in DB
-	var allArtists []Artist
-	err = app.db.Find(&allArtists).Error
-	if err != nil {
-	    errorResponse(w, fmt.Errorf("Could not get artists from db: %v", err), http.StatusInternalServerError)
-	    return
-	}
-
-	// Loop over artists and see if any have been added
-	for _, spotifyArtist := range(*SpotifyFollowingArtists) {
-	    inList := false
-	    for _, myArtist := range(user.ArtistsFollowing) {
-		if myArtist.SpotifyID == spotifyArtist.ID.String() {
-		    inList = true
-		    break
-		}
-	    }
-	    // If an artist has been added, put it on the ArtistsRecentlyFollowed
-	    if !inList {
-		// Add the artist to the DB if it doesn't exist
-		var artist *Artist
-		for _, a := range(allArtists) {
-		    if(spotifyArtist.ID.String() == a.SpotifyID) {
-			artist = &a
-			break
-		    }
-		}
-		if artist == nil {
-		    // Going to need to create it
-		    artistVal := MakeArtist(spotifyArtist)
-		    artist = &artistVal
-		}
-		// Add also to user
-		user.ArtistsFollowing = append(user.ArtistsFollowing, *artist)
-		user.ArtistsRecentlyFollowed = append(user.ArtistsRecentlyFollowed, *artist)
-	    }
-	}
-	err = app.db.Save(&user).Error
+	err = app.db.Model(&user).Association("ArtistsRecentlyFollowed").Append(*artist).Error
 	if err != nil {
 	    errorResponse(w, fmt.Errorf("Could not save user: %v", err), http.StatusInternalServerError)
 	    return
 	}
-    } 
+    }
     okResponse(w, "Done")
 }
 
@@ -330,24 +370,32 @@ func (app App) RefreshRecentlyListened(w http.ResponseWriter, r *http.Request) {
 	return
     }
 
+    // Clear existing list of RecentlyListened
+    err = app.db.Model(&user).Association("ArtistsRecentlyListened").Clear().Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not clear associations: %v", err), http.StatusInternalServerError)
+	return
+    }
+
     recentlyPlayedSpotifyList, err := spotifyClient.PlayerRecentlyPlayed()
     if err != nil {
 	errorResponse(w, fmt.Errorf("Failed to load recently played: %v", err), http.StatusInternalServerError)
 	return
     }
 
-    var newRecentlyListened []Artist
-
     for _, recentlyPlayedSpotify := range(recentlyPlayedSpotifyList) {
 	// Get the first artist associated with this track
 	spotifyArtist := recentlyPlayedSpotify.Track.Artists[0]
-	var dbArtist *Artist
+	var artist *Artist
 	for _, a := range(allArtists) {
 	    if(spotifyArtist.ID.String() == a.SpotifyID) {
-		dbArtist = &a
+		artist = &a
+		break
 	    }
 	}
-	if dbArtist == nil {
+	if artist == nil {
+	    fmt.Printf("Artist not in DB: %s %s", 
+		       spotifyArtist.Name, spotifyArtist.ID.String())
 	    // Look up the full artist
 	    fullArtist, err := spotifyClient.GetArtist(spotifyArtist.ID)
 	    if err != nil {
@@ -355,27 +403,23 @@ func (app App) RefreshRecentlyListened(w http.ResponseWriter, r *http.Request) {
 		return
 	    }
 
-	    // Need to allocate a new variable for this
+	    // Make into object to insert into DB
 	    artistVal := MakeArtist(*fullArtist)
-	    dbArtist = &artistVal
+	    artist = &artistVal
 	}
-
+	
 	// Check if this is already in list
 	exists := false
-	for _, a := range(newRecentlyListened) {
-	    if a.SpotifyID == dbArtist.SpotifyID {
-		fmt.Printf( "Not Adding: %s", dbArtist.Name )
+	for _, a := range(user.ArtistsFollowing) {
+	    if(a.SpotifyID == artist.SpotifyID) {
 		exists = true
 	    }
 	}
 	if !exists {
-	    newRecentlyListened = append(newRecentlyListened, *dbArtist)
+	    user.ArtistsRecentlyListened = append(user.ArtistsRecentlyListened, *artist)
 	}
     }
 
-
-    // Replace the old list with a new one
-    app.db.Model(&user).Association("ArtistsRecentlyListened").Replace(newRecentlyListened) 
     err = app.db.Save(&user).Error
     if err != nil {
 	errorResponse(w, fmt.Errorf("Could not save user: %v", err), http.StatusInternalServerError)

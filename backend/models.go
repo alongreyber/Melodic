@@ -17,7 +17,7 @@ type SpotifyImage struct {
 
 type Artist struct {
     gorm.Model
-    SpotifyID string
+    SpotifyID string `gorm:"unique"`
     Name string
     URI string
     Endpoint string
@@ -30,7 +30,7 @@ type Artist struct {
 
 type User struct {
     gorm.Model
-    SpotifyID string
+    SpotifyID string `gorm:"unique"`
     SpotifyTokenAccess string
     SpotifyTokenRefresh string
     SpotifyTokenExpiry time.Time

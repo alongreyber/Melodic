@@ -32,7 +32,7 @@ func main() {
     app := App{db: db,
 	       spotifyAuth: &spotifyAuth}
 
-   //db.LogMode(true)
+    //db.LogMode(true)
 
     db.AutoMigrate(&User{})
     db.AutoMigrate(&Artist{})
@@ -49,6 +49,7 @@ func main() {
     api.HandleFunc("/healthCheck", app.HealthCheckHandler)
     api.HandleFunc("/getCallbackURL", app.CallbackURL).Methods("GET")
 
+    api.HandleFunc("/initializeFollowing", app.InitializeFollowing).Methods("GET")
     api.HandleFunc("/recentlyFollowed", app.GetRecentlyFollowed).Methods("GET")
     api.HandleFunc("/recentlyListened", app.GetRecentlyListened).Methods("GET")
     api.HandleFunc("/recentlyFollowed/refresh", app.RefreshRecentlyFollowed).Methods("GET")

@@ -16,6 +16,7 @@ getToken	/home/alon/melodic/backend/routes.go	/^func getToken(user User) (*oauth
 getUser	/home/alon/melodic/backend/routes.go	/^func getUser(ctx context.Context) User {$/;"	f	language:Go
 GetUserMiddleware	/home/alon/melodic/backend/routes.go	/^func (app App) GetUserMiddleware(next http.Handler) http.Handler {$/;"	f	language:Go
 HealthCheckHandler	/home/alon/melodic/backend/routes.go	/^func (app App) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+InitializeFollowing	/home/alon/melodic/backend/routes.go	/^func (app App) InitializeFollowing(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 JwtAuthentication	/home/alon/melodic/backend/routes.go	/^func (app App) JwtAuthentication(next http.Handler) http.Handler {$/;"	f	language:Go
 jwtKey	/home/alon/melodic/backend/routes.go	/^var jwtKey = []byte("my_secret_key")$/;"	v	language:Go
 LogoutHandler	/home/alon/melodic/backend/routes.go	/^func (app App) LogoutHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
