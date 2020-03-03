@@ -3,6 +3,34 @@
     <div class='title is-2'>
 	Create a Review
     </div>
+
+    <br />
+
+    <div class="columns">
+	<div class="column">
+	    <div class="dropdown" :class="{'is-active' : showSearchResults}">
+		<div class="field dropdown-trigger" style="width: 100%">
+		    <div class="control">
+			<input class="input is-info is-medium" type="text" v-model="searchText" v-on:input="search" placeholder="Search by Artist">
+		    </div>
+		</div>
+		<div class="dropdown-menu" style="width: 100%">
+		    <div class="dropdown-content">
+			<a class="dropdown-item" v-for="s in searchResults">
+			    {{s.name}}
+			</a>
+		    </div>
+		</div>
+	    </div>
+	</div>
+	<div class="column is-one-fifth">
+	    <button class="button is-primary is-medium">Start</button>
+	</div>
+    </div>
+
+    <br />
+    <br />
+
     <div class="columns">
 	<div class="column">
 	    <div class="level">
@@ -50,6 +78,10 @@ export default {
     components: { ArtistCard },
     data: function() {
 	return {
+	    searchText: "",
+	    searchTimeout: null,
+	    searchResults: [],
+	    showSearchResults: false,
 	    recentlyFollowed: [],
 	    recentlyListened: [],
 	    refreshingFollowed: false,
@@ -61,6 +93,14 @@ export default {
 	this.getListened()
     }, 
     methods: {
+	search: function() {
+	    clearTimeout(this.searchTimeout);
+	    this.searchTimeout = setTimeout(async function() {
+		let searchResults = await getApi('/searchArtists?q=' + encodeURI(this.searchText))
+		this.searchResults = searchResults;
+		this.showSearchResults = true;
+	    }.bind(this), 500);
+	},
 	getFollowed: async function() { 
 	    let artists = await getApi('/recentlyFollowed');
 	    if(artists) {

@@ -2,9 +2,9 @@
 <div class="card add-spacing">
     <div class="card-content">
 
-	<div class="columns is-one-third">
-	    <div class="column is-one-fifth">
-		<img width="50" height="50" :src="image_url" alt="Could not get image">
+	<div class="columns is-one-third is-mobile is-vcentered">
+	    <div class="column is-one-fifth is-square">
+		<img :src="image_url_or_placeholder" alt="Could not get image" style="max-width: 50%">
 	    </div>
 	    <div class="column is-size-5">
 		{{ Name }}
@@ -23,7 +23,17 @@
 <script>
 export default {
     name: 'ArtistCard',
-    props: ["image_url", "Name"]
+    props: ["image_url", "Name"],
+    computed: {
+	image_url_or_placeholder: function() {
+	    if(this.image_url)
+		return this.image_url
+	    else
+		return "https://d1nhio0ox7pgb.cloudfront.net/_img/o_collection_png/green_dark_grey/256x256/plain/user.png"
+
+	}
+    },
+
 }
 </script>
 

@@ -8,26 +8,32 @@
 		  Melodic
 		  </span>
 	      </div>
+	      <a class="navbar-burger" @click="show_menu = !show_menu">
+		  <span></span><span></span><span></span>
+              </a>
 	  </div>
 
-	  <div class="navbar-start">
-	    <a class="navbar-item">Home</a>
-	  </div>
-
-	  <div class="navbar-end">
-	      <div class="navbar-item">
-		  Welcome {{ $store.state.user.display_name }}
+	  <div class="navbar-menu" :class="{'is-active' : show_menu}">
+	      <div class="navbar-start">
+		<a class="navbar-item">Home</a>
 	      </div>
-	      <div class="navbar-item">
-		  <div class="buttons">
-		      <button class="button is-light" v-on:click="logout">
-			  Log Out
-		      </button>
+
+	      <div class="navbar-end">
+		  <div class="navbar-item">
+		      Welcome {{ $store.state.user.display_name }}
+		  </div>
+		  <div class="navbar-item">
+		      <div class="buttons">
+			  <button class="button is-light" v-on:click="logout">
+			      Log Out
+			  </button>
+		      </div>
 		  </div>
 	      </div>
 	  </div>
       </nav>
-      <div class="container space-above" id="main-container">
+      <br />
+      <div class="container" id="main-container">
 	  <div class="modal" :class="{'is-active' : $store.state.modal }">
 	      <div class="modal-background"></div>
 	      <div class="modal-card">
@@ -55,6 +61,12 @@ import { getApi } from './api';
 
 export default {
     name: 'App',
+    data: function() {
+	return {
+	    // Only used on mobile
+	    show_menu : false
+	}
+    },
     computed: {
 	loggedIn: function() {
 	    return this.$store.state.loggedIn;
@@ -73,13 +85,11 @@ export default {
 </script>
 
 <style lang="scss">
-.space-above {
-    margin-top: 10px;
-}
 .logo-text {
     margin-left: 5px;
     font-family: "Georgia", Serif;
     font-weight: bold;
     font-size: 1.5rem;
 }
+
 </style>

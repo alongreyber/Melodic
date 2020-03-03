@@ -48,6 +48,7 @@ func main() {
     api.HandleFunc("/getUserInfo", app.GetThisUserInfo)
     api.HandleFunc("/healthCheck", app.HealthCheckHandler)
     api.HandleFunc("/getCallbackURL", app.CallbackURL).Methods("GET")
+    api.HandleFunc("/searchArtists", app.SearchArtists)
 
     api.HandleFunc("/initializeFollowing", app.InitializeFollowing).Methods("GET")
     api.HandleFunc("/recentlyFollowed", app.GetRecentlyFollowed).Methods("GET")

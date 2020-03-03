@@ -29,6 +29,7 @@ okResponse	/home/alon/melodic/backend/routes.go	/^func okResponse(w http.Respons
 RefreshHandler	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 RefreshRecentlyFollowed	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 RefreshRecentlyListened	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshRecentlyListened(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+SearchArtists	/home/alon/melodic/backend/routes.go	/^func (app App) SearchArtists(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 SpotifyImage	/home/alon/melodic/backend/models.go	/^type SpotifyImage struct {$/;"	t	language:Go
 SpotifyLoginHandler	/home/alon/melodic/backend/routes.go	/^func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 User	/home/alon/melodic/backend/models.go	/^type User struct {$/;"	t	language:Go

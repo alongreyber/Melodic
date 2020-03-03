@@ -201,6 +201,7 @@ func (app App) InitializeFollowing(w http.ResponseWriter, r *http.Request) {
     }
     spotifyClient := app.spotifyAuth.NewClient(token)
 
+    // TODO use associations
     // Load following and listento artists
     err := app.db.Set("gorm:auto_preload", true).Preload("ArtistsRecentlyFollowed.Images").First(&user, user.ID).Error
     if err != nil {
@@ -256,6 +257,30 @@ func (app App) InitializeFollowing(w http.ResponseWriter, r *http.Request) {
 
     okResponse(w, "Done")
 
+}
+
+func (app App) SearchArtists(w http.ResponseWriter, r *http.Request) {
+    user := getUser(r.Context())
+    token, ok := getToken(user)
+    if !ok {
+	panic("Couldn't make token")
+    }
+    spotifyClient := app.spotifyAuth.NewClient(token)
+
+    queryArray, ok := r.URL.Query()["q"]
+    if !ok || len(queryArray) != 1 || queryArray[0] == "" {
+	// Just return no results
+	okResponse(w, []string{})
+    }
+    query := queryArray[0]
+
+    results, err := spotifyClient.Search(query, spotify.SearchTypeArtist)
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Could not get search result: %v", err), http.StatusInternalServerError)
+	return
+    }
+
+    okResponse(w, results.Artists.Artists[:5])
 }
 
 func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {
@@ -320,7 +345,7 @@ func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {
 	    // Going to need to create it
 	    artistVal := MakeArtist(spotifyArtist)
 	    artist = &artistVal
-	    err = app.db.Create(artist).Error
+	    err = app.db.Set("gorm:assocation_autocreate", true).Create(artist).Error
 	    if err != nil {
 		errorResponse(w, fmt.Errorf("Could not create artist: %v", err), http.StatusInternalServerError)
 		return

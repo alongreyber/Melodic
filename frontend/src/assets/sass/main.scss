@@ -10,5 +10,8 @@ $primary: $pink;
 $link: $teal;
 $info: $blue;
 
+// Reduce spacing on card
+$card-content-padding: 0.75rem;
+
 // Import complete Bulma
 @import '~bulma/bulma.sass';
