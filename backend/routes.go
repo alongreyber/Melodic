@@ -193,6 +193,62 @@ func MakeArtist(spotifyArtist spotify.FullArtist) Artist {
 
 }
 
+func (app App) MakeReview(w http.ResponseWriter, r *http.Request) {
+    user := getUser(r.Context())
+    keys, ok := r.URL.Query()["ArtistID"]
+    if !ok || len(keys[0]) < 1 {
+	errorResponse(w, fmt.Errorf("Missing URL Param ArtistID"), http.StatusBadRequest)
+        return
+    }
+    ArtistID := keys[0]
+    // Check if Artist is in DB
+    var artist Artist
+    err := app.db.Where(&Artist{SpotifyID: ArtistID}).First(&artist).Error
+    if gorm.IsRecordNotFoundError(err) {
+	// Not in db, have to get from spotify and create
+	token, ok := getToken(user)
+	if !ok {
+	    panic("Couldn't make token")
+	}
+	spotifyClient := app.spotifyAuth.NewClient(token)
+	spotifyArtist, err := spotifyClient.GetArtist(spotify.ID(ArtistID))
+	if err != nil {
+	    errorResponse(w, fmt.Errorf("Invalid Spotify ID"), http.StatusBadRequest)
+	}
+	artist = MakeArtist(*spotifyArtist)
+	err = app.db.Create(artist).Error
+	if err != nil {
+	    errorResponse(w, fmt.Errorf("Failed to create artist %v", err), http.StatusInternalServerError)
+	}
+    } else if err != nil {
+	errorResponse(w, fmt.Errorf("Could not get artist from db: %v", err), http.StatusInternalServerError)
+        return
+    }
+    // Now that we have artist, create ArtistReview
+    review := ArtistReview{
+	ArtistID: artist.ID,
+	UserID: user.ID,
+    }
+    err = app.db.Create(&review).Error
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Failed to create review: %v", err), http.StatusInternalServerError)
+	return
+    }
+    okResponse(w, review)
+
+}
+
+func (app App) EditReview(w http.ResponseWriter, r *http.Request) {
+    var review ArtistReview
+        err := json.NewDecoder(r.Body).Decode(&review)
+    if err != nil {
+	errorResponse(w, fmt.Errorf("Error parsing review: %v", err), http.StatusBadRequest)
+        return
+    }
+
+}
+
+
 func (app App) InitializeFollowing(w http.ResponseWriter, r *http.Request) {
     user := getUser(r.Context())
     token, ok := getToken(user)

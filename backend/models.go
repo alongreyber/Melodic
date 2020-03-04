@@ -28,6 +28,27 @@ type Artist struct {
     UsersRecentlyListened []User `gorm:"many2many:user_recentlylistened_artist"`
 }
 
+type Tag struct {
+    gorm.Model
+    Name string
+}
+
+type ArtistReview struct {
+    gorm.Model
+    ArtistID uint
+    UserID uint
+    OverallScore int
+    Notes string
+
+    LyricsScore int
+    VocalsScore int
+    SonicsScore int
+    ProductionScore int
+    ImpactScore int
+
+    Tags []Tag
+}
+
 type User struct {
     gorm.Model
     SpotifyID string `gorm:"unique"`
@@ -39,4 +60,5 @@ type User struct {
     ArtistsFollowing []Artist `gorm:"many2many:user_following_artist"`
     ArtistsRecentlyFollowed []Artist `gorm:"many2many:user_recentlyfollowed_artist"`
     ArtistsRecentlyListened []Artist `gorm:"many2many:user_recentlylistened_artist"`
+    ArtistReviews []ArtistReview
 }

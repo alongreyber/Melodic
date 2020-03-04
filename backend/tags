@@ -4,8 +4,10 @@ AddHeaders	/home/alon/melodic/backend/routes.go	/^func (app App) AddHeaders(next
 addUser	/home/alon/melodic/backend/routes.go	/^func addUser(ctx context.Context, u User) (context.Context) {$/;"	f	language:Go
 App	/home/alon/melodic/backend/index.go	/^type App struct {$/;"	t	language:Go
 Artist	/home/alon/melodic/backend/models.go	/^type Artist struct {$/;"	t	language:Go
+ArtistReview	/home/alon/melodic/backend/models.go	/^type ArtistReview struct {$/;"	t	language:Go
 CallbackURL	/home/alon/melodic/backend/routes.go	/^func (app App) CallbackURL(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 Claims	/home/alon/melodic/backend/routes.go	/^type Claims struct {$/;"	t	language:Go
+EditReview	/home/alon/melodic/backend/routes.go	/^func (app App) EditReview(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 errorResponse	/home/alon/melodic/backend/routes.go	/^func errorResponse(w http.ResponseWriter, err error, status int) {$/;"	f	language:Go
 GetAllFollowingArtists	/home/alon/melodic/backend/routes.go	/^func GetAllFollowingArtists(spotifyClient spotify.Client) (*[]spotify.FullArtist, error) {$/;"	f	language:Go
 getClaims	/home/alon/melodic/backend/routes.go	/^func getClaims(ctx context.Context) (*Claims, bool) {$/;"	f	language:Go
@@ -25,6 +27,7 @@ main	/home/alon/melodic/backend/index.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/models.go	/^package main$/;"	p	language:Go
 main	/home/alon/melodic/backend/routes.go	/^package main$/;"	p	language:Go
 MakeArtist	/home/alon/melodic/backend/routes.go	/^func MakeArtist(spotifyArtist spotify.FullArtist) Artist {$/;"	f	language:Go
+MakeReview	/home/alon/melodic/backend/routes.go	/^func (app App) MakeReview(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 okResponse	/home/alon/melodic/backend/routes.go	/^func okResponse(w http.ResponseWriter, data interface{}) {$/;"	f	language:Go
 RefreshHandler	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 RefreshRecentlyFollowed	/home/alon/melodic/backend/routes.go	/^func (app App) RefreshRecentlyFollowed(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
@@ -32,4 +35,5 @@ RefreshRecentlyListened	/home/alon/melodic/backend/routes.go	/^func (app App) Re
 SearchArtists	/home/alon/melodic/backend/routes.go	/^func (app App) SearchArtists(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
 SpotifyImage	/home/alon/melodic/backend/models.go	/^type SpotifyImage struct {$/;"	t	language:Go
 SpotifyLoginHandler	/home/alon/melodic/backend/routes.go	/^func (app App) SpotifyLoginHandler(w http.ResponseWriter, r *http.Request) {$/;"	f	language:Go
+Tag	/home/alon/melodic/backend/models.go	/^type Tag struct {$/;"	t	language:Go
 User	/home/alon/melodic/backend/models.go	/^type User struct {$/;"	t	language:Go

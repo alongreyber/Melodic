@@ -10,7 +10,7 @@
 		{{ Name }}
 	    </div>
 	    <div class="column is-one-fifth">
-		<button class="button is-primary">
+		<button class="button is-primary" @click="$emit('makeReview')">
 		    Start
 		</button>
 	    </div>

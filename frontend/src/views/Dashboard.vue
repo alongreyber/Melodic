@@ -11,12 +11,12 @@
 	    <div class="dropdown" :class="{'is-active' : showSearchResults}">
 		<div class="field dropdown-trigger" style="width: 100%">
 		    <div class="control">
-			<input class="input is-info is-medium" type="text" v-model="searchText" v-on:input="search" placeholder="Search by Artist">
+			<input class="input is-info is-medium" type="text" v-model="searchText" v-on:input="search" @focus="showSearchResults = true" @blur="showSearchResults = false" placeholder="Search by Artist">
 		    </div>
 		</div>
 		<div class="dropdown-menu" style="width: 100%">
 		    <div class="dropdown-content">
-			<a class="dropdown-item" v-for="s in searchResults">
+			<a class="dropdown-item" v-for="s in searchResults" @mousedown="searchText = s.name">
 			    {{s.name}}
 			</a>
 		    </div>
@@ -41,7 +41,7 @@
 		    <button class="button is-secondary" @click="refreshFollowed" :class="{'is-loading' : refreshingFollowed}">Refresh</button>
 		</div>
 	    </div>
-	    <ArtistCard v-for="a in recentlyFollowed" v-bind="a" :key="a.SpotifyID"></ArtistCard>
+	    <ArtistCard v-for="a in recentlyFollowed" v-bind="a" @makeReview="makeReview(a.SpotifyID)" :key="a.SpotifyID"></ArtistCard>
 	</div>
 	<div class="column">
 	    <div class="level">
@@ -52,7 +52,7 @@
 		    <button class="button is-secondary" @click="refreshListened" :class="{'is-loading' : refreshingListened}">Refresh</button>
 		</div>
 	    </div>
-	    <ArtistCard v-for="a in recentlyListened" v-bind="a" :key="a.SpotifyID"></ArtistCard>
+	    <ArtistCard v-for="a in recentlyListened" v-bind="a" @makeReview="makeReview(a.SpotifyID)" :key="a.SpotifyID"></ArtistCard>
 	</div>
     </div>
 </div>
@@ -98,8 +98,11 @@ export default {
 	    this.searchTimeout = setTimeout(async function() {
 		let searchResults = await getApi('/searchArtists?q=' + encodeURI(this.searchText))
 		this.searchResults = searchResults;
-		this.showSearchResults = true;
 	    }.bind(this), 500);
+	},
+	makeReview: async function(spotifyID) {
+	    let review = await getApi("/artistReview/new?ArtistID=" + encodeURI(spotifyID));
+	    this.$router.push('/review/' + review.ID);
 	},
 	getFollowed: async function() { 
 	    let artists = await getApi('/recentlyFollowed');
@@ -118,7 +121,6 @@ export default {
 	refreshFollowed: async function() {
 	    this.refreshingFollowed = true;
 	    let result = await getApi('/recentlyFollowed/refresh');
-	    console.log(result)
 	    if(result) {
 		this.getFollowed();
 	    }
@@ -127,7 +129,6 @@ export default {
 	refreshListened: async function() {
 	    this.refreshingListened = true;
 	    let result = await getApi('/recentlyListened/refresh');
-	    console.log(result)
 	    if(result) {
 		this.getListened();
 	    }

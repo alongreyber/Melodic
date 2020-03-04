@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import Dashboard from '../views/Dashboard.vue'
+import ArtistReview from '../views/ArtistReview.vue'
 import store from '../store';
 
 Vue.use(VueRouter)
@@ -25,6 +26,13 @@ const routes = [
     name: 'Dashboard',
     component: Dashboard,
     beforeEnter: loginGuard
+  },
+  {
+    path: '/review/:id',
+    name: 'Edit Review',
+    component: ArtistReview,
+    props: true,
+    beforeEnter: loginGuard,
   }
 ]
 

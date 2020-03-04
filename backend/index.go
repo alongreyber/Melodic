@@ -34,9 +34,11 @@ func main() {
 
     //db.LogMode(true)
 
-    db.AutoMigrate(&User{})
-    db.AutoMigrate(&Artist{})
     db.AutoMigrate(&SpotifyImage{})
+    db.AutoMigrate(&Artist{})
+    db.AutoMigrate(&Tag{})
+    db.AutoMigrate(&ArtistReview{})
+    db.AutoMigrate(&User{})
 
     r := mux.NewRouter()
     r.Use(app.AddHeaders)
@@ -55,6 +57,8 @@ func main() {
     api.HandleFunc("/recentlyListened", app.GetRecentlyListened).Methods("GET")
     api.HandleFunc("/recentlyFollowed/refresh", app.RefreshRecentlyFollowed).Methods("GET")
     api.HandleFunc("/recentlyListened/refresh", app.RefreshRecentlyListened).Methods("GET")
+
+    api.HandleFunc("/artistReview/new", app.MakeReview)
 
     // Log all requests and responses to stdout for debugging
     loggedRouter := handlers.LoggingHandler(os.Stdout, r)
